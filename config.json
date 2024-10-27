@@ -1,0 +1,18 @@
+{
+    "name": "js-license",
+    "version": "v0.0.2",
+    "image_name": "ceherzog/plugin-js-license",
+    "image_version": "0.0.2",
+    "depends_on": [
+        "js-sbom"
+    ],
+    "description": "A plugin to analyze licenses of JavaScript packages",
+    "config": {
+        "licensePolicy": {
+            "name": "License Policy",
+            "type": "Array<string>",
+            "description": "A list of licenses that are disallowed in the project",
+            "required": true
+        }
+    }
+}
