@@ -6,7 +6,7 @@ services:
       target: plugin-dev
       args:
         - PLUGINNAME=js-license
-    image: ceherzog/js-license-dev:latest
+    image: codeclarityce/js-license-dev:latest
     restart: always
     volumes:
       - ../../backend:/codeclarity
