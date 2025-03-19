@@ -2,7 +2,6 @@
     "name": "js-license",
     "version": "v0.0.1-alpha",
     "image_name": "codeclarityce/plugin-js-license",
-    "image_version": "0.0.1",
     "depends_on": [
         "js-sbom"
     ],
