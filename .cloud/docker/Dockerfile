@@ -5,31 +5,31 @@ ARG USERNAME=codeclarity
 ARG PLUGINNAME=plugin
 
 # DEV IMAGE
-FROM golang:1.24.1-alpine AS plugin-dev
+FROM golang:1.24.2-alpine AS plugin-dev
 ARG KIND
 ARG PLUGINNAME
 WORKDIR /codeclarity/${KIND}/${PLUGINNAME}
 ADD .cloud/docker/config/* /root
 RUN apk add git
 RUN go install github.com/air-verse/air@latest
-CMD air -c .air.toml
+CMD ["air", "-c", ".air.toml"]
 
 # DEBUG IMAGE
-FROM golang:1.24.1-alpine AS plugin-debug
+FROM golang:1.24.2-alpine AS plugin-debug
 ARG KIND
 ARG PLUGINNAME
-ENV KIND ${KIND}
-ENV PLUGINNAME ${PLUGINNAME}
+ENV KIND=${KIND}
+ENV PLUGINNAME=${PLUGINNAME}
 RUN apk add git
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 ADD .cloud/docker/config/* /root
 WORKDIR /codeclarity/${KIND}/${PLUGINNAME}
-CMD /go/bin/dlv debug . --headless --listen=:40000 --accept-multiclient
+CMD ["/go/bin/dlv", "debug", ".", "--headless", "--listen=:40000", "--accept-multiclient"]
 # CMD tail -f /dev/null
 
 
 # BUILD IMAGE
-FROM golang:1.24.1-alpine AS plugin-build
+FROM golang:1.24.2-alpine AS plugin-build
 ARG KIND
 ARG PLUGINNAME
 COPY . /codeclarity/${KIND}/${PLUGINNAME}
@@ -50,7 +50,5 @@ USER ${USERNAME}
 WORKDIR /home/${USERNAME}/${PLUGINNAME}
 COPY --from=plugin-build --chown=codeclarity:codeclarity /codeclarity/${KIND}/${PLUGINNAME}/plugin .
 COPY --from=plugin-build --chown=codeclarity:codeclarity /codeclarity/${KIND}/${PLUGINNAME}/config.json .
-
-RUN mkdir /home/${USERNAME}/private
 
 ENTRYPOINT [ "./plugin" ]
