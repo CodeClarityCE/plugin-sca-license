@@ -12,7 +12,6 @@ require (
 	github.com/uptrace/bun v1.2.11
 	github.com/uptrace/bun/dialect/pgdialect v1.2.11
 	github.com/uptrace/bun/driver/pgdriver v1.2.11
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
 )
 
 require (
