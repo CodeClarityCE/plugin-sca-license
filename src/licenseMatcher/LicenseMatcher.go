@@ -3,12 +3,13 @@ package matcher
 import (
 	"log"
 
+	"slices"
+
 	sbomTypes "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
 	licenseRepository "github.com/CodeClarityCE/plugin-sca-license/src/repository/license"
 	types "github.com/CodeClarityCE/plugin-sca-license/src/types"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	"github.com/uptrace/bun"
-	"golang.org/x/exp/slices"
 )
 
 type LicenseDataSource string
