@@ -3,7 +3,7 @@ module github.com/CodeClarityCE/plugin-sca-license
 go 1.24.3
 
 require (
-	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.14-alpha
+	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.15-alpha
 	github.com/CodeClarityCE/utility-amqp-helper v0.0.3-alpha
 	github.com/CodeClarityCE/utility-dbhelper v0.0.5-alpha
 	github.com/CodeClarityCE/utility-types v0.0.6-alpha

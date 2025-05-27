@@ -1,5 +1,5 @@
-github.com/CodeClarityCE/plugin-sbom-javascript v0.0.14-alpha h1:jY0yocZ2ESBJ+K1ghkL5/TBBJHBESwHUvmD9sBa+1aU=
-github.com/CodeClarityCE/plugin-sbom-javascript v0.0.14-alpha/go.mod h1:NO/GMl8QU7ykx1j8Uj8lrSMtL9LyVV+Komgb+h9tdj4=
+github.com/CodeClarityCE/plugin-sbom-javascript v0.0.15-alpha h1:nQv23DHNjE1BD++zH52ibsEO9QmEfM6VfgNMZ3KwR+0=
+github.com/CodeClarityCE/plugin-sbom-javascript v0.0.15-alpha/go.mod h1:TXPQBKohg83W5w1ZV5Bdm0gsWCFZ+ocGAu9wQRKcau8=
 github.com/CodeClarityCE/utility-amqp-helper v0.0.3-alpha h1:MXov/eLwTVlArIBHXwKjPL48QKz9ClFgP0J2+ANK+OU=
 github.com/CodeClarityCE/utility-amqp-helper v0.0.3-alpha/go.mod h1:kWW7yD90ZH1Xj1jGYwSmo4GW5UjMyR492XSvflBSmjo=
 github.com/CodeClarityCE/utility-dbhelper v0.0.5-alpha h1:+UR5jCIt8tMxy80XC7VI0L6TIJWs9Uncl8R22uGJcWo=
