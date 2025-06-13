@@ -1,12 +1,38 @@
-# Service - SCA license finder 
-
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/CodeClarityCE/identity/blob/main/logo/vectorized/logo_name_white.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/CodeClarityCE/identity/blob/main/logo/vectorized/logo_name_black.svg">
+  <img alt="codeclarity-logo" src="https://github.com/CodeClarityCE/identity/blob/main/logo/vectorized/logo_name_black.svg">
+</picture>
+<br>
 <br>
 
-<div align="center">
-    <img src="https://user-images.githubusercontent.com/124595411/233356880-fdc7ea8a-8b1d-4991-8726-67b47e91df9e.svg" width="400px" />
-</div>
+Secure your software empower your team.
 
-<br>
+[![License](https://img.shields.io/github/license/codeclarityce/codeclarity-dev)](LICENSE.txt)
+
+<details open="open">
+<summary>Table of Contents</summary>
+
+- [CodeClarity Plugin - SCA License Finder](#codeclarity-plugin---sca-license-finder)
+  - [Contributing](#contributing)
+  - [Reporting Issues](#reporting-issues)
+  - [Purpose](#purpose)
+  - [How to add support for a new language?](#how-to-add-support-for-a-new-language)
+
+
+</details>
+
+---
+
+# CodeClarity Plugin - SCA License Finder
+
+## Contributing
+
+If you'd like to contribute code or documentation, please see [CONTRIBUTING.md](https://github.com/CodeClarityCE/codeclarity-dev/blob/main/CONTRIBUTING.md) for guidelines on how to do so.
+
+## Reporting Issues
+
+Please report any issues with the setup process or other problems encountered while using this repository by opening a new issue in this project's GitHub page.
 
 ## Purpose
 
