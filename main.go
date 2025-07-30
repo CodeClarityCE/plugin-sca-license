@@ -137,6 +137,7 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 		Result:     types.ConvertOutputToMap(licenseOutput),
 		AnalysisId: dispatcherMessage.AnalysisId,
 		Plugin:     config.Name,
+		CreatedOn:  time.Now(),
 	}
 	_, err = args.codeclarity.NewInsert().Model(&license_result).Exec(context.Background())
 	if err != nil {
