@@ -1,0 +1,2 @@
+This software is Copyright (C) 2021-2024 University of Luxembourg.
+This software is licensed under the AGPL-3.0-or-later (the "License"); you may not use this file except in compliance with the License. See [License.txt]
