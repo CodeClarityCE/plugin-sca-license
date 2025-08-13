@@ -1,12 +1,12 @@
 services:
-  plugin-js-license:
+  plugin-license-finder:
     build:
       context: ../../backend
-      dockerfile: plugins/js-license/.cloud/docker/Dockerfile
+      dockerfile: plugins/license-finder/.cloud/docker/Dockerfile
       target: plugin-dev
       args:
-        - PLUGINNAME=js-license
-    image: codeclarityce/js-license-dev:latest
+        - PLUGINNAME=license-finder
+    image: codeclarityce/license-finder-dev:latest
     restart: always
     volumes:
       - ../../backend:/codeclarity
