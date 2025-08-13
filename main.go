@@ -35,6 +35,7 @@ type Arguments struct {
 	knowledge   *bun.DB
 }
 
+
 // main is the entry point of the program.
 // It reads the configuration, initializes the necessary databases and graph,
 // and starts listening on the queue.
@@ -99,8 +100,9 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 
 	// Get previous stage
 	analysis_stage := analysis_document.Stage - 1
-	// Get sbomKey from previous stage
+	// Get sbomKey from previous stage and detect language
 	sbomKey := uuid.UUID{}
+	detectedLanguage := ""
 	for _, step := range analysis_document.Steps[analysis_stage] {
 		if step.Name == "js-sbom" {
 			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
@@ -108,11 +110,18 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 				panic(err)
 			}
 			sbomKey = sbomKeyUUID
+			detectedLanguage = "JS"
+			break
+		} else if step.Name == "php-sbom" {
+			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
+			if err != nil {
+				panic(err)
+			}
+			sbomKey = sbomKeyUUID
+			detectedLanguage = "PHP"
 			break
 		}
 	}
-
-	var licenseOutput types.Output
 
 	start := time.Now()
 	res := codeclarity.Result{
@@ -123,6 +132,9 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 	if err != nil {
 		panic(err)
 	}
+	
+	var licenseOutput types.Output
+	
 	sbom := sbom.Output{}
 	err = json.Unmarshal(res.Result.([]byte), &sbom)
 	if err != nil {
@@ -130,7 +142,7 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 		// return outputGenerator.FailureOutput(nil, start)
 		licenseOutput = outputGenerator.FailureOutput(sbom.AnalysisInfo, start)
 	} else {
-		licenseOutput = plugin.Start(args.knowledge, sbom, "JS", licensePolicy, start)
+		licenseOutput = plugin.Start(args.knowledge, sbom, detectedLanguage, licensePolicy, start)
 	}
 
 	license_result := codeclarity.Result{

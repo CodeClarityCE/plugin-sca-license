@@ -33,7 +33,7 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 
 	language_supported := false
 	// Check which language was requested
-	if languageId == "JS" {
+	if languageId == "JS" || languageId == "PHP" {
 		licenseMatcher = licenseMatcherManager.LicenseMatcher{
 			LicenseDataSource:   licenseMatcherManager.LICENSE_DATA_SOURCE_DB,
 			PostProcessLicenses: true,
