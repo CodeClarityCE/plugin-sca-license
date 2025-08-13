@@ -96,53 +96,73 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 			licensePolicy.DisallowedLicense = append(licensePolicy.DisallowedLicense, license.(string))
 		}
 	}
-	// licensePolicy := license.LicensePolicy{}
 
 	// Get previous stage
 	analysis_stage := analysis_document.Stage - 1
-	// Get sbomKey from previous stage and detect language
-	sbomKey := uuid.UUID{}
-	detectedLanguage := ""
+	// Get all SBOM keys from previous stage
+	sbomKeys := []struct {
+		id       uuid.UUID
+		language string
+		pluginName string
+	}{}
+	
 	for _, step := range analysis_document.Steps[analysis_stage] {
 		if step.Name == "js-sbom" {
 			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
 			if err != nil {
 				panic(err)
 			}
-			sbomKey = sbomKeyUUID
-			detectedLanguage = "JS"
-			break
+			sbomKeys = append(sbomKeys, struct {
+				id       uuid.UUID
+				language string
+				pluginName string
+			}{sbomKeyUUID, "JS", "js-sbom"})
 		} else if step.Name == "php-sbom" {
 			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
 			if err != nil {
 				panic(err)
 			}
-			sbomKey = sbomKeyUUID
-			detectedLanguage = "PHP"
-			break
+			sbomKeys = append(sbomKeys, struct {
+				id       uuid.UUID
+				language string
+				pluginName string
+			}{sbomKeyUUID, "PHP", "php-sbom"})
 		}
 	}
 
-	start := time.Now()
-	res := codeclarity.Result{
-		Id: sbomKey,
-	}
-
-	err := args.codeclarity.NewSelect().Model(&res).Where("id = ?", sbomKey).Scan(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	
 	var licenseOutput types.Output
+	var err error
+	start := time.Now()
 	
-	sbom := sbom.Output{}
-	err = json.Unmarshal(res.Result.([]byte), &sbom)
-	if err != nil {
-		exceptionManager.AddError("", exceptions.GENERIC_ERROR, fmt.Sprintf("Error when reading sbom output: %s", err), exceptions.FAILED_TO_READ_PREVIOUS_STAGE_OUTPUT)
-		// return outputGenerator.FailureOutput(nil, start)
-		licenseOutput = outputGenerator.FailureOutput(sbom.AnalysisInfo, start)
+	// If no SBOMs were found, return success with empty results
+	if len(sbomKeys) == 0 {
+		licenseOutput = outputGenerator.SuccessOutput(map[string]types.WorkSpaceLicenseInfo{}, types.AnalysisStats{}, sbom.AnalysisInfo{
+			Status: codeclarity.SUCCESS,
+		}, start)
 	} else {
-		licenseOutput = plugin.Start(args.knowledge, sbom, detectedLanguage, licensePolicy, start)
+		// Process the first available SBOM (for now, we'll process just the first one)
+		// In the future, this could be enhanced to merge multiple SBOM results
+		sbomInfo := sbomKeys[0]
+		
+		res := codeclarity.Result{
+			Id: sbomInfo.id,
+		}
+		err = args.codeclarity.NewSelect().Model(&res).Where("id = ?", sbomInfo.id).Scan(context.Background())
+		if err != nil {
+			panic(err)
+		}
+
+		sbomData := sbom.Output{}
+		err = json.Unmarshal(res.Result.([]byte), &sbomData)
+		if err != nil {
+			exceptionManager.AddError(
+				"", exceptions.GENERIC_ERROR,
+				fmt.Sprintf("Error when reading %s output: %s", sbomInfo.pluginName, err), exceptions.FAILED_TO_READ_PREVIOUS_STAGE_OUTPUT,
+			)
+			licenseOutput = outputGenerator.FailureOutput(sbomData.AnalysisInfo, start)
+		} else {
+			licenseOutput = plugin.Start(args.knowledge, sbomData, sbomInfo.language, licensePolicy, start)
+		}
 	}
 
 	license_result := codeclarity.Result{
