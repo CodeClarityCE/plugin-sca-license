@@ -2,7 +2,10 @@
     "name": "license-finder",
     "version": "v0.0.12-alpha",
     "image_name": "codeclarityce/plugin-license-finder",
-    "depends_on": [],
+    "depends_on": [
+        "js-sbom",
+        "php-sbom"
+    ],
     "description": "A plugin to analyze licenses of JavaScript and PHP packages",
     "config": {
         "licensePolicy": {
