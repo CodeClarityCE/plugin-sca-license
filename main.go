@@ -35,7 +35,6 @@ type Arguments struct {
 	knowledge   *bun.DB
 }
 
-
 // main is the entry point of the program.
 // It reads the configuration, initializes the necessary databases and graph,
 // and starts listening on the queue.
@@ -101,11 +100,11 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 	analysis_stage := analysis_document.Stage - 1
 	// Get all SBOM keys from previous stage
 	sbomKeys := []struct {
-		id       uuid.UUID
-		language string
+		id         uuid.UUID
+		language   string
 		pluginName string
 	}{}
-	
+
 	for _, step := range analysis_document.Steps[analysis_stage] {
 		if step.Name == "js-sbom" {
 			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
@@ -113,8 +112,8 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 				panic(err)
 			}
 			sbomKeys = append(sbomKeys, struct {
-				id       uuid.UUID
-				language string
+				id         uuid.UUID
+				language   string
 				pluginName string
 			}{sbomKeyUUID, "JS", "js-sbom"})
 		} else if step.Name == "php-sbom" {
@@ -123,8 +122,8 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 				panic(err)
 			}
 			sbomKeys = append(sbomKeys, struct {
-				id       uuid.UUID
-				language string
+				id         uuid.UUID
+				language   string
 				pluginName string
 			}{sbomKeyUUID, "PHP", "php-sbom"})
 		}
@@ -133,7 +132,7 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 	var licenseOutput types.Output
 	var err error
 	start := time.Now()
-	
+
 	// If no SBOMs were found, return success with empty results
 	if len(sbomKeys) == 0 {
 		licenseOutput = outputGenerator.SuccessOutput(map[string]types.WorkSpaceLicenseInfo{}, types.AnalysisStats{}, sbom.AnalysisInfo{
@@ -143,7 +142,7 @@ func startAnalysis(args Arguments, dispatcherMessage types_amqp.DispatcherPlugin
 		// Process the first available SBOM (for now, we'll process just the first one)
 		// In the future, this could be enhanced to merge multiple SBOM results
 		sbomInfo := sbomKeys[0]
-		
+
 		res := codeclarity.Result{
 			Id: sbomInfo.id,
 		}
