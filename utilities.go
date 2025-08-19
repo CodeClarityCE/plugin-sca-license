@@ -209,7 +209,7 @@ func register(config plugin.Plugin) error {
 // Finally, the updated analysis document is saved back to the database.
 // If the step is not found, an error is returned.
 func updateAnalysis(result map[string]any, status codeclarity.AnalysisStatus, analysis_document codeclarity.Analysis, config plugin.Plugin, start time.Time, end time.Time, db *bun.DB) (codeclarity.Analysis, error) {
-	for step_id, step := range analysis_document.Steps[analysis_document.Stage] {
+	for _, step := range analysis_document.Steps[analysis_document.Stage] {
 		// Update step status
 		if step.Name == config.Name {
 			err := db.RunInTx(context.Background(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
@@ -219,11 +219,23 @@ func updateAnalysis(result map[string]any, status codeclarity.AnalysisStatus, an
 					return err
 				}
 
-				// Update step information
-				analysis_document.Steps[analysis_document.Stage][step_id].Status = status
-				analysis_document.Steps[analysis_document.Stage][step_id].Result = result
-				analysis_document.Steps[analysis_document.Stage][step_id].Started_on = start.Format(time.RFC3339Nano)
-				analysis_document.Steps[analysis_document.Stage][step_id].Ended_on = end.Format(time.RFC3339Nano)
+				// Find the correct step in the current stage after reload
+				stepFound := false
+				for currentStepId, currentStep := range analysis_document.Steps[analysis_document.Stage] {
+					if currentStep.Name == config.Name {
+						// Update step information
+						analysis_document.Steps[analysis_document.Stage][currentStepId].Status = status
+						analysis_document.Steps[analysis_document.Stage][currentStepId].Result = result
+						analysis_document.Steps[analysis_document.Stage][currentStepId].Started_on = start.Format(time.RFC3339Nano)
+						analysis_document.Steps[analysis_document.Stage][currentStepId].Ended_on = end.Format(time.RFC3339Nano)
+						stepFound = true
+						break
+					}
+				}
+				
+				if !stepFound {
+					return fmt.Errorf("step %s not found in stage %d", config.Name, analysis_document.Stage)
+				}
 
 				// Update analysis document
 				_, err = tx.NewUpdate().Model(&analysis_document).WherePK().Exec(ctx)
