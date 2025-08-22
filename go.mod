@@ -2,9 +2,10 @@ module github.com/CodeClarityCE/plugin-sca-license
 
 go 1.24.3
 
+replace github.com/CodeClarityCE/utility-types => ../../utilities/types
+
 require (
 	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.18-alpha
-	github.com/CodeClarityCE/utility-amqp-helper v0.0.6-alpha
 	github.com/CodeClarityCE/utility-dbhelper v0.0.8-alpha
 	github.com/CodeClarityCE/utility-types v0.0.11-alpha
 	github.com/google/uuid v1.6.0
@@ -15,6 +16,7 @@ require (
 )
 
 require (
+	github.com/CodeClarityCE/utility-amqp-helper v0.0.6-alpha // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
