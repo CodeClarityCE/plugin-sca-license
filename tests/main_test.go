@@ -1,38 +1,38 @@
 package main
 
 import (
-	"database/sql"
 	"os"
 	"testing"
 	"time"
 
 	license "github.com/CodeClarityCE/plugin-sca-license/src"
-	dbhelper "github.com/CodeClarityCE/utility-dbhelper/helper"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
+	"github.com/CodeClarityCE/utility-types/boilerplates"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	"github.com/stretchr/testify/assert"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 func TestCreate(t *testing.T) {
+	// Set test database environment
 	os.Setenv("PG_DB_HOST", "127.0.0.1")
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
 
-	dsn_knowledge := "postgres://postgres:!ChangeMe!@127.0.0.1:5432/" + dbhelper.Config.Database.Knowledge + "?sslmode=disable"
-	sqldb_knowledge := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn_knowledge)))
-	db_knowledge := bun.NewDB(sqldb_knowledge, pgdialect.New())
-	defer db_knowledge.Close()
+	// Create PluginBase for testing
+	pluginBase, err := boilerplates.CreatePluginBase()
+	if err != nil {
+		t.Skipf("Skipping test due to database connection error: %v", err)
+		return
+	}
+	defer pluginBase.Close()
 
 	var licensePolicy = knowledge.LicensePolicy{}
 	licensePolicy.DisallowedLicense = []string{"MIT"}
 
 	sbom := getmockSBOM()
 
-	out := license.Start(db_knowledge, sbom, "JS", licensePolicy, time.Now())
+	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
 
 	// Assert the expected values
 	assert.NotNil(t, out)
@@ -41,22 +41,26 @@ func TestCreate(t *testing.T) {
 }
 
 func BenchmarkCreate(b *testing.B) {
+	// Set test database environment
 	os.Setenv("PG_DB_HOST", "127.0.0.1")
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
 
-	dsn_knowledge := "postgres://postgres:!ChangeMe!@127.0.0.1:5432/" + dbhelper.Config.Database.Knowledge + "?sslmode=disable"
-	sqldb_knowledge := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn_knowledge)))
-	db_knowledge := bun.NewDB(sqldb_knowledge, pgdialect.New())
-	defer db_knowledge.Close()
+	// Create PluginBase for testing
+	pluginBase, err := boilerplates.CreatePluginBase()
+	if err != nil {
+		b.Skipf("Skipping benchmark due to database connection error: %v", err)
+		return
+	}
+	defer pluginBase.Close()
 
 	var licensePolicy = knowledge.LicensePolicy{}
 	licensePolicy.DisallowedLicense = []string{"MIT"}
 
 	sbom := getmockSBOM()
 
-	out := license.Start(db_knowledge, sbom, "JS", licensePolicy, time.Now())
+	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
 
 	// Assert the expected values
 	assert.NotNil(b, out)

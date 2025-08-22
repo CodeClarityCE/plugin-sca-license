@@ -11,7 +11,7 @@ import (
 	plugin "github.com/CodeClarityCE/plugin-sca-license/src"
 	"github.com/CodeClarityCE/plugin-sca-license/src/outputGenerator"
 	"github.com/CodeClarityCE/plugin-sca-license/src/types"
-	"github.com/CodeClarityCE/utility-types/ecosystem"
+	"github.com/CodeClarityCE/utility-types/boilerplates"
 	types_amqp "github.com/CodeClarityCE/utility-types/amqp"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
 	"github.com/CodeClarityCE/utility-types/exceptions"
@@ -26,7 +26,7 @@ type LicenseAnalysisHandler struct{}
 
 // StartAnalysis implements the AnalysisHandler interface
 func (h *LicenseAnalysisHandler) StartAnalysis(
-	databases *ecosystem.PluginDatabases,
+	databases *boilerplates.PluginDatabases,
 	dispatcherMessage types_amqp.DispatcherPluginMessage,
 	config plugin_db.Plugin,
 	analysisDoc codeclarity.Analysis,
@@ -36,7 +36,7 @@ func (h *LicenseAnalysisHandler) StartAnalysis(
 
 // main is the entry point of the program.
 func main() {
-	pluginBase, err := ecosystem.NewPluginBase()
+	pluginBase, err := boilerplates.CreatePluginBase()
 	if err != nil {
 		log.Fatalf("Failed to initialize plugin base: %v", err)
 	}
@@ -50,7 +50,7 @@ func main() {
 	}
 }
 
-func startAnalysis(databases *ecosystem.PluginDatabases, dispatcherMessage types_amqp.DispatcherPluginMessage, config plugin_db.Plugin, analysis_document codeclarity.Analysis) (map[string]any, codeclarity.AnalysisStatus, error) {
+func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage types_amqp.DispatcherPluginMessage, config plugin_db.Plugin, analysis_document codeclarity.Analysis) (map[string]any, codeclarity.AnalysisStatus, error) {
 	// Get analysis config
 	messageData := analysis_document.Config[config.Name].(map[string]any)
 	// Prepare the arguments for the plugin

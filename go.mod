@@ -6,17 +6,15 @@ replace github.com/CodeClarityCE/utility-types => ../../utilities/types
 
 require (
 	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.18-alpha
-	github.com/CodeClarityCE/utility-dbhelper v0.0.8-alpha
 	github.com/CodeClarityCE/utility-types v0.0.11-alpha
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	github.com/uptrace/bun v1.2.15
-	github.com/uptrace/bun/dialect/pgdialect v1.2.15
-	github.com/uptrace/bun/driver/pgdriver v1.2.15
 )
 
 require (
 	github.com/CodeClarityCE/utility-amqp-helper v0.0.6-alpha // indirect
+	github.com/CodeClarityCE/utility-dbhelper v0.0.8-alpha // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -27,6 +25,8 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
+	github.com/uptrace/bun/dialect/pgdialect v1.2.15 // indirect
+	github.com/uptrace/bun/driver/pgdriver v1.2.15 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
