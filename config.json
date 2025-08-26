@@ -1,11 +1,12 @@
 {
-    "name": "js-license",
-    "version": "v0.0.11-alpha",
-    "image_name": "codeclarityce/plugin-js-license",
+    "name": "license-finder",
+    "version": "v0.0.12-alpha",
+    "image_name": "codeclarityce/plugin-license-finder",
     "depends_on": [
-        "js-sbom"
+        "js-sbom",
+        "php-sbom"
     ],
-    "description": "A plugin to analyze licenses of JavaScript packages",
+    "description": "A plugin to analyze licenses of JavaScript and PHP packages",
     "config": {
         "licensePolicy": {
             "name": "License Policy",

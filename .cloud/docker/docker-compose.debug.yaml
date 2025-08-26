@@ -1,8 +1,8 @@
 services:
-  plugin-js-license:
+  plugin-license-finder:
     # For dev we keep the golang container and install devtools
     build:
       target: plugin-debug
-    image: codeclarityce/js-license-debug:latest
+    image: codeclarityce/license-finder-debug:latest
     ports:
       - 40000:40000
