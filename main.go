@@ -11,12 +11,12 @@ import (
 	plugin "github.com/CodeClarityCE/plugin-sca-license/src"
 	"github.com/CodeClarityCE/plugin-sca-license/src/outputGenerator"
 	"github.com/CodeClarityCE/plugin-sca-license/src/types"
-	"github.com/CodeClarityCE/utility-types/boilerplates"
 	types_amqp "github.com/CodeClarityCE/utility-types/amqp"
+	"github.com/CodeClarityCE/utility-types/boilerplates"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
 	"github.com/CodeClarityCE/utility-types/exceptions"
-	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	exceptionManager "github.com/CodeClarityCE/utility-types/exceptions"
+	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	plugin_db "github.com/CodeClarityCE/utility-types/plugin_db"
 	"github.com/google/uuid"
 )
@@ -135,7 +135,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 
 			// Process this SBOM
 			individualOutput := plugin.Start(databases.Knowledge, sbomData, sbomInfo.language, licensePolicy, start)
-			
+
 			if individualOutput.AnalysisInfo.Status != codeclarity.SUCCESS {
 				log.Printf("%s license analysis failed", sbomInfo.language)
 				hasErrors = true
@@ -158,7 +158,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 							for _, dep := range deps {
 								combined[dep] = true
 							}
-							
+
 							var mergedDeps []string
 							for dep := range combined {
 								mergedDeps = append(mergedDeps, dep)
@@ -180,7 +180,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 							for _, dep := range deps {
 								combined[dep] = true
 							}
-							
+
 							var mergedDeps []string
 							for dep := range combined {
 								mergedDeps = append(mergedDeps, dep)
@@ -199,7 +199,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 					for _, violation := range workspaceData.LicenseComplianceViolations {
 						violationSet[violation] = true
 					}
-					
+
 					var mergedViolations []string
 					for violation := range violationSet {
 						mergedViolations = append(mergedViolations, violation)
@@ -242,7 +242,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 		} else {
 			// Return merged results with empty sbom.AnalysisInfo for compatibility
 			sbomAnalysisInfo := sbom.AnalysisInfo{Status: codeclarity.SUCCESS}
-			
+
 			log.Printf("License analysis completed: merged %d workspaces from %d SBOMs", len(mergedWorkspaces), len(sbomKeys))
 			licenseOutput = outputGenerator.SuccessOutput(mergedWorkspaces, mergedStats, sbomAnalysisInfo, start)
 		}
