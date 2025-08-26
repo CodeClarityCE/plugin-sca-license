@@ -6,7 +6,7 @@ import (
 	"time"
 
 	license "github.com/CodeClarityCE/plugin-sca-license/src"
-	"github.com/CodeClarityCE/utility-types/boilerplates"
+	"github.com/CodeClarityCE/utility-boilerplates"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	"github.com/stretchr/testify/assert"
