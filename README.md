@@ -18,6 +18,7 @@ Secure your software empower your team.
   - [Reporting Issues](#reporting-issues)
   - [Purpose](#purpose)
   - [How to add support for a new language?](#how-to-add-support-for-a-new-language)
+  - [Acknowledgement of Copyright and Co-Authorship](#acknowledgement-of-copyright-and-co-authorship)
 
 
 </details>
@@ -91,3 +92,9 @@ This `PackageRepository` must provide 2 simple functions:
 2. `GetPackageLicenseText func(depName string, depVersion string, scoped bool) (string, error)` get the license text of the package (if any)
 
 If `LicenseDataSource == licenseMatcherManager.LICENSE_DATA_SOURCE_SBOM`, you must still implement this package repository abstraction. In `GetPackageDenotedLicenseIds` you may simply return an empty list, since the license list is retrieved from the sbom and not the db. But `GetPackageLicenseText` must be implemented correctly.
+
+## Acknowledgement of Copyright and Co-Authorship
+
+This software was developed as part of the research project “FNR JUMP SecuBox”, funded by the Luxembourg National Research Fund (FNR), grant number JUMP21/16693582/SecuBox (hereafter the “Project”).
+The software was developed at the University of Luxembourg (hereafter the “University”) and is subject to its intellectual property policy. Accordingly, the copyright of this software is held by the University of Luxembourg.
+The development of this software involved contributions from several researchers affiliated with the University during the Project period. Their work was instrumental in achieving the technical and scientific objectives of the Project.
