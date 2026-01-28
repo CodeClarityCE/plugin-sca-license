@@ -1,6 +1,6 @@
 {
     "name": "license-finder",
-    "version": "v0.0.16-alpha",
+    "version": "v0.0.17-alpha",
     "image_name": "codeclarityce/plugin-license-finder",
     "depends_on": [
         "js-sbom",
