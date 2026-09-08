@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"time"
 
 	sbom "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
@@ -56,7 +57,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 	// Prepare the arguments for the plugin
 	licensePolicy := knowledge.LicensePolicy{}
 	if messageData["licensePolicy"] != nil {
-		for _, license := range messageData["licensePolicy"].([]interface{}) {
+		for _, license := range messageData["licensePolicy"].([]any) {
 			licensePolicy.DisallowedLicense = append(licensePolicy.DisallowedLicense, license.(string))
 		}
 	}
@@ -207,9 +208,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 					existing.LicenseComplianceViolations = mergedViolations
 
 					// Merge dependency info
-					for depKey, depInfo := range workspaceData.DependencyInfo {
-						existing.DependencyInfo[depKey] = depInfo
-					}
+					maps.Copy(existing.DependencyInfo, workspaceData.DependencyInfo)
 
 					mergedWorkspaces[workspaceKey] = existing
 				} else {
