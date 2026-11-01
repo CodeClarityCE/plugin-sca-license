@@ -1,6 +1,6 @@
 module github.com/CodeClarityCE/plugin-sca-license
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.25-alpha
