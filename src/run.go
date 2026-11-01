@@ -1,6 +1,7 @@
 package license
 
 import (
+	"maps"
 	"time"
 
 	sbom "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
@@ -69,9 +70,7 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 			workSpaceLicenseInfo.LicensesDepMap[licenseKey] = append(workSpaceLicenseInfo.LicensesDepMap[licenseKey], depsUsingLicense...)
 		}
 
-		for licenseKey, depsUsingLicense := range workSpaceLicenseInfoInternal.NonSpdxLicensesDepMap {
-			workSpaceLicenseInfo.NonSpdxLicensesDepMap[licenseKey] = depsUsingLicense
-		}
+		maps.Copy(workSpaceLicenseInfo.NonSpdxLicensesDepMap, workSpaceLicenseInfoInternal.NonSpdxLicensesDepMap)
 
 		for licenseKey := range workSpaceLicenseInfoInternal.LicenseComplianceViolations {
 			workSpaceLicenseInfo.LicenseComplianceViolations = append(workSpaceLicenseInfo.LicenseComplianceViolations, licenseKey)
