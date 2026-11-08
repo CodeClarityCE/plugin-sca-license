@@ -29,8 +29,31 @@ type sbomKey struct {
 	pluginName string
 }
 
-// sbomKeysFromSteps returns the SBOM results of the steps that ran across the given stages.
-func sbomKeysFromSteps(stages [][]codeclarity.Step) []sbomKey {
+// stepFailure logs the raw cause and returns a failed step that carries a readable reason.
+func stepFailure(reason string, cause error) (map[string]any, codeclarity.AnalysisStatus, error) {
+	log.Printf("License finder failed: %s: %v", reason, cause)
+	return map[string]any{codeclarity.StepFailureReasonKey: reason}, codeclarity.FAILURE, nil
+}
+
+// firstReason keeps the earlier failure when a later step also fails.
+func firstReason(earlier, later string) string {
+	if earlier != "" {
+		return earlier
+	}
+	return later
+}
+
+// languageName spells out an SBOM language for people to read.
+func languageName(language string) string {
+	if language == "JS" {
+		return "JavaScript"
+	}
+	return language
+}
+
+// sbomKeysFromSteps returns the SBOM results of the steps that ran across the given stages,
+// or the reason one of them cannot be used.
+func sbomKeysFromSteps(stages [][]codeclarity.Step) ([]sbomKey, string) {
 	languages := map[string]string{"js-sbom": "JS", "php-sbom": "PHP"}
 	keys := []sbomKey{}
 	for _, steps := range stages {
@@ -39,14 +62,16 @@ func sbomKeysFromSteps(stages [][]codeclarity.Step) []sbomKey {
 			if !isSbom || step.Status != codeclarity.SUCCESS {
 				continue
 			}
-			id, err := uuid.Parse(step.Result["sbomKey"].(string))
+			rawKey, _ := step.Result["sbomKey"].(string)
+			id, err := uuid.Parse(rawKey)
 			if err != nil {
-				panic(err)
+				log.Printf("Invalid %s key: %v", step.Name, err)
+				return nil, fmt.Sprintf("the %s dependency list could not be found", languageName(language))
 			}
 			keys = append(keys, sbomKey{id, language, step.Name})
 		}
 	}
-	return keys
+	return keys, ""
 }
 
 // LicenseAnalysisHandler implements the AnalysisHandler interface
@@ -78,23 +103,40 @@ func main() {
 	}
 }
 
+const invalidLicensePolicyReason = "the license policy is not valid, it must be a list of license names"
+
 func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage types_amqp.DispatcherPluginMessage, config plugin_db.Plugin, analysis_document codeclarity.Analysis) (map[string]any, codeclarity.AnalysisStatus, error) {
 	// Get analysis config
-	messageData := analysis_document.Config[config.Name].(map[string]any)
+	messageData, ok := analysis_document.Config[config.Name].(map[string]any)
+	if !ok {
+		return stepFailure("the license policy settings are missing", fmt.Errorf("no %s config", config.Name))
+	}
 	// Prepare the arguments for the plugin
 	licensePolicy := knowledge.LicensePolicy{}
 	if messageData["licensePolicy"] != nil {
-		for _, license := range messageData["licensePolicy"].([]any) {
-			licensePolicy.DisallowedLicense = append(licensePolicy.DisallowedLicense, license.(string))
+		licenses, ok := messageData["licensePolicy"].([]any)
+		if !ok {
+			return stepFailure(invalidLicensePolicyReason, fmt.Errorf("licensePolicy is %T", messageData["licensePolicy"]))
+		}
+		for _, license := range licenses {
+			name, ok := license.(string)
+			if !ok {
+				return stepFailure(invalidLicensePolicyReason, fmt.Errorf("licensePolicy entry is %T", license))
+			}
+			licensePolicy.DisallowedLicense = append(licensePolicy.DisallowedLicense, name)
 		}
 	}
 
 	// Get all SBOM keys from every earlier stage
 	earlierStages := analysis_document.Steps[:min(analysis_document.Stage, len(analysis_document.Steps))]
-	sbomKeys := sbomKeysFromSteps(earlierStages)
+	sbomKeys, keyFailure := sbomKeysFromSteps(earlierStages)
+	if keyFailure != "" {
+		return stepFailure(keyFailure, fmt.Errorf("unusable SBOM step result"))
+	}
 
 	var licenseOutput types.Output
 	var err error
+	failureReason := ""
 	start := time.Now()
 
 	// If no SBOMs were found, return success with empty results
@@ -103,7 +145,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 			Status: codeclarity.SUCCESS,
 		}, start)
 	} else {
-		licenseOutput = combineLicenseOutputs(sbomKeys, func(sbomInfo sbomKey) (types.Output, error) {
+		licenseOutput, failureReason = combineLicenseOutputs(sbomKeys, func(sbomInfo sbomKey) (types.Output, error) {
 			return analyzeSbom(databases, sbomInfo, licensePolicy, start)
 		}, start)
 	}
@@ -116,7 +158,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 	}
 	_, err = databases.Codeclarity.NewInsert().Model(&license_result).Exec(context.Background())
 	if err != nil {
-		panic(err)
+		return stepFailure(firstReason(failureReason, "the license results could not be saved"), fmt.Errorf("failed to insert license result: %w", err))
 	}
 
 	// Prepare the result to store in step
@@ -124,6 +166,9 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 	// The other plugins will use this key to get the sbom
 	result := make(map[string]any)
 	result["licenseKey"] = license_result.Id
+	if failureReason != "" {
+		result[codeclarity.StepFailureReasonKey] = failureReason
+	}
 
 	// The output is always a map[string]any
 	return result, licenseOutput.AnalysisInfo.Status, nil
@@ -154,11 +199,11 @@ func analyzeSbom(databases *boilerplates.PluginDatabases, sbomInfo sbomKey, lice
 	return plugin.Start(databases.Knowledge, sbomData, sbomInfo.language, licensePolicy, start), nil
 }
 
-// combineLicenseOutputs merges the license results of every SBOM.
+// combineLicenseOutputs merges the license results of every SBOM and says why it failed, if it did.
 // One SBOM that cannot be analyzed fails the step, so no ecosystem goes missing.
-func combineLicenseOutputs(sbomKeys []sbomKey, analyze func(sbomKey) (types.Output, error), start time.Time) types.Output {
-	failed := func() types.Output {
-		return outputGenerator.FailureOutput(sbom.AnalysisInfo{Status: codeclarity.FAILURE}, start)
+func combineLicenseOutputs(sbomKeys []sbomKey, analyze func(sbomKey) (types.Output, error), start time.Time) (types.Output, string) {
+	failed := func(reason string) (types.Output, string) {
+		return outputGenerator.FailureOutput(sbom.AnalysisInfo{Status: codeclarity.FAILURE}, start), reason
 	}
 	mergedWorkspaces := make(map[string]types.WorkSpaceLicenseInfo)
 	mergedStats := types.AnalysisStats{}
@@ -167,11 +212,11 @@ func combineLicenseOutputs(sbomKeys []sbomKey, analyze func(sbomKey) (types.Outp
 		individualOutput, err := analyze(sbomInfo)
 		if err != nil {
 			log.Printf("License analysis failed: %v", err)
-			return failed()
+			return failed(fmt.Sprintf("the %s dependency list could not be read", languageName(sbomInfo.language)))
 		}
 		if individualOutput.AnalysisInfo.Status != codeclarity.SUCCESS {
 			log.Printf("%s license analysis failed", sbomInfo.language)
-			return failed()
+			return failed(fmt.Sprintf("the licenses of the %s dependencies could not be checked", languageName(sbomInfo.language)))
 		}
 
 		log.Printf("Successfully processed %s license analysis with %d workspaces", sbomInfo.language, len(individualOutput.WorkSpaces))
@@ -264,5 +309,5 @@ func combineLicenseOutputs(sbomKeys []sbomKey, analyze func(sbomKey) (types.Outp
 	}
 
 	log.Printf("License analysis completed: merged %d workspaces from %d SBOMs", len(mergedWorkspaces), len(sbomKeys))
-	return outputGenerator.SuccessOutput(mergedWorkspaces, mergedStats, sbom.AnalysisInfo{Status: codeclarity.SUCCESS}, start)
+	return outputGenerator.SuccessOutput(mergedWorkspaces, mergedStats, sbom.AnalysisInfo{Status: codeclarity.SUCCESS}, start), ""
 }

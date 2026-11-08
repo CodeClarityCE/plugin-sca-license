@@ -41,7 +41,7 @@ func TestSbomKeysIgnoresSkippedSteps(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := sbomKeysFromSteps(tc.steps)
+			got, _ := sbomKeysFromSteps(tc.steps)
 			if len(got) != len(tc.want) {
 				t.Fatalf("got %+v, want %v", got, tc.want)
 			}
