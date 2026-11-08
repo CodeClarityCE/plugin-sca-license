@@ -11,24 +11,32 @@ func TestSbomKeysIgnoresSkippedSteps(t *testing.T) {
 	phpKey := "22222222-2222-2222-2222-222222222222"
 	cases := []struct {
 		name  string
-		steps []codeclarity.Step
+		steps [][]codeclarity.Step
 		want  map[string]string
 	}{
 		{
 			name: "both ecosystems",
-			steps: []codeclarity.Step{
+			steps: [][]codeclarity.Step{{
 				{Name: "js-sbom", Status: codeclarity.SUCCESS, Result: map[string]any{"sbomKey": jsKey}},
 				{Name: "php-sbom", Status: codeclarity.SUCCESS, Result: map[string]any{"sbomKey": phpKey}},
-			},
+			}},
 			want: map[string]string{"JS": jsKey, "PHP": phpKey},
 		},
 		{
 			name: "skipped step has no result",
-			steps: []codeclarity.Step{
+			steps: [][]codeclarity.Step{{
 				{Name: "js-sbom", Status: codeclarity.SKIPPED, Result: map[string]any{"skip_reason": "php only"}},
 				{Name: "php-sbom", Status: codeclarity.SUCCESS, Result: map[string]any{"sbomKey": phpKey}},
-			},
+			}},
 			want: map[string]string{"PHP": phpKey},
+		},
+		{
+			name: "SBOMs in different earlier stages",
+			steps: [][]codeclarity.Step{
+				{{Name: "js-sbom", Status: codeclarity.SUCCESS, Result: map[string]any{"sbomKey": jsKey}}},
+				{{Name: "php-sbom", Status: codeclarity.SUCCESS, Result: map[string]any{"sbomKey": phpKey}}},
+			},
+			want: map[string]string{"JS": jsKey, "PHP": phpKey},
 		},
 	}
 	for _, tc := range cases {
