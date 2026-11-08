@@ -22,6 +22,31 @@ import (
 	"github.com/google/uuid"
 )
 
+// sbomKey identifies one SBOM result to process.
+type sbomKey struct {
+	id         uuid.UUID
+	language   string
+	pluginName string
+}
+
+// sbomKeysFromSteps returns the SBOM results of the steps that ran, ignoring skipped ones.
+func sbomKeysFromSteps(steps []codeclarity.Step) []sbomKey {
+	languages := map[string]string{"js-sbom": "JS", "php-sbom": "PHP"}
+	keys := []sbomKey{}
+	for _, step := range steps {
+		language, isSbom := languages[step.Name]
+		if !isSbom || step.Status != codeclarity.SUCCESS {
+			continue
+		}
+		id, err := uuid.Parse(step.Result["sbomKey"].(string))
+		if err != nil {
+			panic(err)
+		}
+		keys = append(keys, sbomKey{id, language, step.Name})
+	}
+	return keys
+}
+
 // LicenseAnalysisHandler implements the AnalysisHandler interface
 type LicenseAnalysisHandler struct{}
 
@@ -65,35 +90,7 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 	// Get previous stage
 	analysis_stage := analysis_document.Stage - 1
 	// Get all SBOM keys from previous stage
-	sbomKeys := []struct {
-		id         uuid.UUID
-		language   string
-		pluginName string
-	}{}
-
-	for _, step := range analysis_document.Steps[analysis_stage] {
-		if step.Name == "js-sbom" {
-			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
-			if err != nil {
-				panic(err)
-			}
-			sbomKeys = append(sbomKeys, struct {
-				id         uuid.UUID
-				language   string
-				pluginName string
-			}{sbomKeyUUID, "JS", "js-sbom"})
-		} else if step.Name == "php-sbom" {
-			sbomKeyUUID, err := uuid.Parse(step.Result["sbomKey"].(string))
-			if err != nil {
-				panic(err)
-			}
-			sbomKeys = append(sbomKeys, struct {
-				id         uuid.UUID
-				language   string
-				pluginName string
-			}{sbomKeyUUID, "PHP", "php-sbom"})
-		}
-	}
+	sbomKeys := sbomKeysFromSteps(analysis_document.Steps[analysis_stage])
 
 	var licenseOutput types.Output
 	var err error
