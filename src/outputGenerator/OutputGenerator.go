@@ -22,6 +22,9 @@ func SuccessOutput(workspaceData map[string]types.WorkSpaceLicenseInfo, analysis
 	output.AnalysisInfo.AnalysisEndTime = formattedEnd
 	output.AnalysisInfo.AnalysisDeltaTime = delta
 	output.AnalysisInfo.Errors = exceptionManager.GetErrors()
+	if analysisStats.LicenseDist == nil {
+		analysisStats.LicenseDist = types.AnalysisStatLicenseSeverityDist{}
+	}
 	output.AnalysisInfo.AnalysisStats = analysisStats
 	return output
 }
@@ -42,6 +45,7 @@ func FailureOutput(sbomAnalysisInfo sbomTypes.AnalysisInfo, start time.Time) typ
 	output.AnalysisInfo.AnalysisEndTime = formattedEnd
 	output.AnalysisInfo.AnalysisDeltaTime = delta
 	output.AnalysisInfo.Errors = exceptionManager.GetErrors()
+	output.AnalysisInfo.AnalysisStats.LicenseDist = types.AnalysisStatLicenseSeverityDist{}
 
 	return output
 }
