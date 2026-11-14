@@ -24,7 +24,29 @@ type LicenseMatcher struct {
 	LicenseDataSource   LicenseDataSource
 }
 
+// Knowledge answers the license questions the matcher asks of the knowledge base.
+type Knowledge interface {
+	PackageLicense(name string) (string, error)
+	IsSpdxLicense(id string) bool
+}
+
+type dbKnowledge struct{ db *bun.DB }
+
+func (k dbKnowledge) PackageLicense(name string) (string, error) {
+	return licenseRepository.GetPackageLicense(k.db, name)
+}
+
+func (k dbKnowledge) IsSpdxLicense(id string) bool {
+	_, err := licenseRepository.GetSPDXLicenseByName(id, k.db)
+	return err == nil
+}
+
 func (lm LicenseMatcher) GetWorkSpaceLicenses(knowledge_db *bun.DB, dependencies map[string]map[string]sbomTypes.Versions, licensePolicy knowledge.LicensePolicy) types.WorkSpaceLicenseInfoInternal {
+	return lm.MatchWorkSpaceLicenses(dbKnowledge{db: knowledge_db}, dependencies, licensePolicy)
+}
+
+// MatchWorkSpaceLicenses lists each dependency under every license its license expression names.
+func (lm LicenseMatcher) MatchWorkSpaceLicenses(source Knowledge, dependencies map[string]map[string]sbomTypes.Versions, licensePolicy knowledge.LicensePolicy) types.WorkSpaceLicenseInfoInternal {
 	licensesDepMap := map[string][]string{}
 	nonSpdxLicensesDepMap := map[string][]string{}
 	licenseComplianceViolations := map[string][]string{}
@@ -32,39 +54,33 @@ func (lm LicenseMatcher) GetWorkSpaceLicenses(knowledge_db *bun.DB, dependencies
 	for dependency_name, dependency := range dependencies {
 		for version_name := range dependency {
 			key := dependency_name + "@" + version_name
-			if lm.LicenseDataSource == LICENSE_DATA_SOURCE_DB {
-				licenses, err := licenseRepository.GetDependencyLicenses(knowledge_db, dependency_name, version_name)
-				if err != nil {
-					log.Printf("Unable to retrieve linked licenses for package: %s", dependency_name)
-					nonSpdxLicensesDepMap[""] = append(nonSpdxLicensesDepMap[""], key)
+			if lm.LicenseDataSource != LICENSE_DATA_SOURCE_DB {
+				continue
+			}
+			expression, err := source.PackageLicense(dependency_name)
+			ids := LicenseIDs(expression)
+			if err != nil || len(ids) == 0 {
+				log.Printf("Unable to retrieve linked licenses for package: %s", dependency_name)
+				nonSpdxLicensesDepMap[""] = append(nonSpdxLicensesDepMap[""], key)
+				continue
+			}
+
+			for _, id := range ids {
+				if !source.IsSpdxLicense(id) {
+					nonSpdxLicensesDepMap[id] = append(nonSpdxLicensesDepMap[id], key)
 					continue
 				}
-
-				// Linked licenses are always spdx, verified during the knowledge base import
-				for _, license := range licenses {
-					deps := append(licensesDepMap[license.LicenseID], key)
-					licensesDepMap[license.LicenseID] = deps
-
-					if slices.Contains(licensePolicy.DisallowedLicense, license.LicenseID) {
-						deps := append(licenseComplianceViolations[license.LicenseID], key)
-						licenseComplianceViolations[license.LicenseID] = deps
-					}
+				licensesDepMap[id] = append(licensesDepMap[id], key)
+				if slices.Contains(licensePolicy.DisallowedLicense, id) {
+					licenseComplianceViolations[id] = append(licenseComplianceViolations[id], key)
 				}
-
 			}
-			// else if lm.LicenseDataSource == LICENSE_DATA_SOURCE_SBOM {
-			// 	// TODO implement
-			// }
 		}
-
 	}
 
-	workSpaceLicenseInfo := types.WorkSpaceLicenseInfoInternal{
+	return types.WorkSpaceLicenseInfoInternal{
 		LicensesDepMap:              licensesDepMap,
 		NonSpdxLicensesDepMap:       nonSpdxLicensesDepMap,
 		LicenseComplianceViolations: licenseComplianceViolations,
 	}
-
-	return workSpaceLicenseInfo
-
 }
