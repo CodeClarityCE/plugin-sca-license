@@ -1,14 +1,13 @@
 package matcher
 
 import (
-	"log"
-
 	"slices"
 
 	sbomTypes "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
 	licenseRepository "github.com/CodeClarityCE/plugin-sca-license/src/repository/license"
 	types "github.com/CodeClarityCE/plugin-sca-license/src/types"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
+	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )
 
@@ -60,20 +59,26 @@ func (lm LicenseMatcher) MatchWorkSpaceLicenses(source Knowledge, dependencies m
 			expression, err := source.PackageLicense(dependency_name)
 			ids := LicenseIDs(expression)
 			if err != nil || len(ids) == 0 {
-				log.Printf("Unable to retrieve linked licenses for package: %s", dependency_name)
+				logrus.WithFields(logrus.Fields{"package": dependency_name, "version": version_name}).
+					Warn("Unable to retrieve linked licenses for package")
 				nonSpdxLicensesDepMap[""] = append(nonSpdxLicensesDepMap[""], key)
 				continue
 			}
 
+			// Listed under every license it names, so an OR with a copyleft license counts as copyleft.
 			for _, id := range ids {
 				if !source.IsSpdxLicense(id) {
 					nonSpdxLicensesDepMap[id] = append(nonSpdxLicensesDepMap[id], key)
 					continue
 				}
 				licensesDepMap[id] = append(licensesDepMap[id], key)
-				if slices.Contains(licensePolicy.DisallowedLicense, id) {
-					licenseComplianceViolations[id] = append(licenseComplianceViolations[id], key)
-				}
+			}
+			// A policy violation only when no OR alternative is allowed.
+			blocked := BlockedLicenses(expression, func(id string) bool {
+				return slices.Contains(licensePolicy.DisallowedLicense, id) && source.IsSpdxLicense(id)
+			})
+			for _, id := range blocked {
+				licenseComplianceViolations[id] = append(licenseComplianceViolations[id], key)
 			}
 		}
 	}

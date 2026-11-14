@@ -7,6 +7,7 @@ require (
 	github.com/CodeClarityCE/utility-boilerplates v0.0.9-alpha
 	github.com/CodeClarityCE/utility-types v0.0.21-alpha
 	github.com/google/uuid v1.6.0
+	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/uptrace/bun v1.2.18
 )
@@ -28,7 +29,6 @@ require (
 	github.com/rabbitmq/amqp091-go v1.15.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/schollz/progressbar/v3 v3.19.1 // indirect
-	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
 	github.com/uptrace/bun/dialect/pgdialect v1.2.18 // indirect
 	github.com/uptrace/bun/driver/pgdriver v1.2.18 // indirect
