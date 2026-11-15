@@ -99,9 +99,50 @@ func TestUnknownPackageIsKeptWithoutALicense(t *testing.T) {
 	assert.Equal(t, map[string][]string{"": {"ghost@1.0.0"}}, info.NonSpdxLicensesDepMap)
 }
 
-func TestDisallowedLicenseInAnOrExpressionIsAViolation(t *testing.T) {
+func TestOrExpressionWithAnAllowedAlternativeIsNotAViolation(t *testing.T) {
 	policy := knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0"}}
-	_, _, violations := match(map[string]string{"node-forge": "(BSD-3-Clause OR GPL-2.0)"}, policy)
+	spdx, _, violations := match(map[string]string{"node-forge": "(BSD-3-Clause OR GPL-2.0)"}, policy)
 
-	assert.Equal(t, map[string][]string{"GPL-2.0": {"node-forge@1.0.0"}}, violations)
+	assert.Empty(t, violations)
+	// Still listed under GPL-2.0, so the copyleft count includes it.
+	assert.Equal(t, []string{"node-forge@1.0.0"}, spdx["GPL-2.0"])
+}
+
+func TestOrExpressionWithEveryAlternativeDisallowedIsAViolation(t *testing.T) {
+	policy := knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0", "LGPL-2.1"}}
+	_, _, violations := match(map[string]string{"pkg": "GPL-2.0 OR LGPL-2.1"}, policy)
+
+	assert.Equal(t, map[string][]string{
+		"GPL-2.0":  {"pkg@1.0.0"},
+		"LGPL-2.1": {"pkg@1.0.0"},
+	}, violations)
+}
+
+func TestDisallowedLicenseInAnAndExpressionIsAViolation(t *testing.T) {
+	policy := knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0"}}
+	_, _, violations := match(map[string]string{"pkg": "MIT AND GPL-2.0"}, policy)
+
+	assert.Equal(t, map[string][]string{"GPL-2.0": {"pkg@1.0.0"}}, violations)
+}
+
+func TestAndBindsTighterThanOr(t *testing.T) {
+	policy := knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0"}}
+	_, _, violations := match(map[string]string{"pkg": "MIT AND GPL-2.0 OR Apache-2.0"}, policy)
+
+	assert.Empty(t, violations)
+}
+
+func TestNestedExpressionNeedsAnAllowedChoiceInEveryAndPart(t *testing.T) {
+	expression := "MIT AND (Apache-2.0 OR GPL-2.0+ WITH Classpath-exception-2.0)"
+
+	_, _, oneBlocked := match(map[string]string{"pkg": expression},
+		knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0+"}})
+	_, _, bothBlocked := match(map[string]string{"pkg": expression},
+		knowledge.LicensePolicy{DisallowedLicense: []string{"GPL-2.0+", "Apache-2.0"}})
+
+	assert.Empty(t, oneBlocked)
+	assert.Equal(t, map[string][]string{
+		"Apache-2.0": {"pkg@1.0.0"},
+		"GPL-2.0+":   {"pkg@1.0.0"},
+	}, bothBlocked)
 }
