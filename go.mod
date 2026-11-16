@@ -3,9 +3,9 @@ module github.com/CodeClarityCE/plugin-sca-license
 go 1.27.4
 
 require (
-	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.27-alpha
-	github.com/CodeClarityCE/utility-boilerplates v0.0.9-alpha
-	github.com/CodeClarityCE/utility-types v0.0.21-alpha
+	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.28-alpha
+	github.com/CodeClarityCE/utility-boilerplates v0.0.10-alpha
+	github.com/CodeClarityCE/utility-types v0.0.22-alpha
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -13,8 +13,8 @@ require (
 )
 
 require (
-	github.com/CodeClarityCE/utility-amqp-helper v0.0.14-alpha // indirect
-	github.com/CodeClarityCE/utility-dbhelper v0.0.17-alpha // indirect
+	github.com/CodeClarityCE/utility-amqp-helper v0.0.15-alpha // indirect
+	github.com/CodeClarityCE/utility-dbhelper v0.0.18-alpha // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
