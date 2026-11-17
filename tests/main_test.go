@@ -18,6 +18,8 @@ func TestCreate(t *testing.T) {
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
+	// Without a database, skip after 1s instead of retrying for the default 120s.
+	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
 
 	// Create PluginBase for testing
 	pluginBase, err := boilerplates.CreatePluginBase()
@@ -46,6 +48,8 @@ func BenchmarkCreate(b *testing.B) {
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
+	// Without a database, skip after 1s instead of retrying for the default 120s.
+	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
 
 	// Create PluginBase for testing
 	pluginBase, err := boilerplates.CreatePluginBase()
