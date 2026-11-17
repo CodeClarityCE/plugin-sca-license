@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"maps"
@@ -10,6 +11,7 @@ import (
 
 	sbom "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
 	plugin "github.com/CodeClarityCE/plugin-sca-license/src"
+	matcher "github.com/CodeClarityCE/plugin-sca-license/src/licenseMatcher"
 	"github.com/CodeClarityCE/plugin-sca-license/src/outputGenerator"
 	"github.com/CodeClarityCE/plugin-sca-license/src/types"
 	"github.com/CodeClarityCE/utility-boilerplates"
@@ -20,6 +22,7 @@ import (
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	plugin_db "github.com/CodeClarityCE/utility-types/plugin_db"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // sbomKey identifies one SBOM result to process.
@@ -105,6 +108,8 @@ func main() {
 
 const invalidLicensePolicyReason = "the license policy is not valid, it must be a list of license names"
 
+const knowledgeLookupReason = "the license database could not be read, try the analysis again"
+
 func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage types_amqp.DispatcherPluginMessage, config plugin_db.Plugin, analysis_document codeclarity.Analysis) (map[string]any, codeclarity.AnalysisStatus, error) {
 	// Get analysis config
 	messageData, ok := analysis_document.Config[config.Name].(map[string]any)
@@ -146,7 +151,14 @@ func startAnalysis(databases *boilerplates.PluginDatabases, dispatcherMessage ty
 		}, start)
 	} else {
 		licenseOutput, failureReason = combineLicenseOutputs(sbomKeys, func(sbomInfo sbomKey) (types.Output, error) {
-			return analyzeSbom(databases, sbomInfo, licensePolicy, start)
+			output, err := analyzeSbom(databases, sbomInfo, licensePolicy, start)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"analysis_id": dispatcherMessage.AnalysisId.String(),
+					"language":    sbomInfo.language,
+				}).WithError(err).Error("License analysis failed")
+			}
+			return output, err
 		}, start)
 	}
 
@@ -196,7 +208,7 @@ func analyzeSbom(databases *boilerplates.PluginDatabases, sbomInfo sbomKey, lice
 		)
 		return types.Output{}, fmt.Errorf("unmarshal %s SBOM: %w", sbomInfo.language, err)
 	}
-	return plugin.Start(databases.Knowledge, sbomData, sbomInfo.language, licensePolicy, start), nil
+	return plugin.Start(databases.Knowledge, sbomData, sbomInfo.language, licensePolicy, start)
 }
 
 // combineLicenseOutputs merges the license results of every SBOM and says why it failed, if it did.
@@ -210,8 +222,10 @@ func combineLicenseOutputs(sbomKeys []sbomKey, analyze func(sbomKey) (types.Outp
 
 	for _, sbomInfo := range sbomKeys {
 		individualOutput, err := analyze(sbomInfo)
+		if errors.Is(err, matcher.ErrKnowledgeLookup) {
+			return failed(knowledgeLookupReason)
+		}
 		if err != nil {
-			log.Printf("License analysis failed: %v", err)
 			return failed(fmt.Sprintf("the %s dependency list could not be read", languageName(sbomInfo.language)))
 		}
 		if individualOutput.AnalysisInfo.Status != codeclarity.SUCCESS {

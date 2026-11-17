@@ -34,7 +34,10 @@ func TestCreate(t *testing.T) {
 
 	sbom := getmockSBOM()
 
-	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Assert the expected values
 	assert.NotNil(t, out)
@@ -64,7 +67,10 @@ func BenchmarkCreate(b *testing.B) {
 
 	sbom := getmockSBOM()
 
-	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	if err != nil {
+		b.Fatal(err)
+	}
 
 	// Assert the expected values
 	assert.NotNil(b, out)

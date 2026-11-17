@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"errors"
+	"slices"
 	"testing"
 
 	sbomTypes "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
@@ -9,27 +10,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// fakeKnowledge serves package licenses and the SPDX list from maps.
+// fakeKnowledge serves package licenses and the SPDX list from maps, and can fail lookups.
 type fakeKnowledge struct {
-	packages map[string]string
-	spdx     []string
+	packages    map[string]string
+	spdx        []string
+	packageErr  error
+	spdxErr     error
+	lookupCount *int
 }
 
-func (f fakeKnowledge) PackageLicense(name string) (string, error) {
+func (f fakeKnowledge) count() {
+	if f.lookupCount != nil {
+		*f.lookupCount++
+	}
+}
+
+func (f fakeKnowledge) PackageLicense(name string) (string, bool, error) {
+	f.count()
+	if f.packageErr != nil {
+		return "", false, f.packageErr
+	}
 	license, ok := f.packages[name]
-	if !ok {
-		return "", errors.New("no such package")
-	}
-	return license, nil
+	return license, ok, nil
 }
 
-func (f fakeKnowledge) IsSpdxLicense(id string) bool {
-	for _, known := range f.spdx {
-		if known == id {
-			return true
-		}
+func (f fakeKnowledge) IsSpdxLicense(id string) (bool, error) {
+	f.count()
+	if f.spdxErr != nil {
+		return false, f.spdxErr
 	}
-	return false
+	return slices.Contains(f.spdx, id), nil
 }
 
 var spdxList = []string{"MIT", "BSD-3-Clause", "GPL-2.0", "GPL-2.0+", "Apache-2.0", "LGPL-2.1"}
@@ -40,7 +50,10 @@ func match(packages map[string]string, policy knowledge.LicensePolicy) (map[stri
 		deps[name] = map[string]sbomTypes.Versions{"1.0.0": {}}
 	}
 	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB}
-	info := lm.MatchWorkSpaceLicenses(fakeKnowledge{packages: packages, spdx: spdxList}, deps, policy)
+	info, err := lm.MatchWorkSpaceLicenses(fakeKnowledge{packages: packages, spdx: spdxList}, deps, policy)
+	if err != nil {
+		panic(err)
+	}
 	return info.LicensesDepMap, info.NonSpdxLicensesDepMap, info.LicenseComplianceViolations
 }
 
@@ -93,10 +106,33 @@ func TestNonSpdxPartIsKeptByItsOwnText(t *testing.T) {
 func TestUnknownPackageIsKeptWithoutALicense(t *testing.T) {
 	deps := map[string]map[string]sbomTypes.Versions{"ghost": {"1.0.0": {}}}
 	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB}
-	info := lm.MatchWorkSpaceLicenses(fakeKnowledge{spdx: spdxList}, deps, knowledge.LicensePolicy{})
+	info, err := lm.MatchWorkSpaceLicenses(fakeKnowledge{spdx: spdxList}, deps, knowledge.LicensePolicy{})
 
+	assert.NoError(t, err)
 	assert.Empty(t, info.LicensesDepMap)
 	assert.Equal(t, map[string][]string{"": {"ghost@1.0.0"}}, info.NonSpdxLicensesDepMap)
+}
+
+func TestFailedPackageLookupStopsTheRun(t *testing.T) {
+	lookups := 0
+	deps := map[string]map[string]sbomTypes.Versions{"a": {"1.0.0": {}}, "b": {"1.0.0": {}}, "c": {"1.0.0": {}}}
+	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB}
+	source := fakeKnowledge{spdx: spdxList, packageErr: errors.New("dial tcp pgbouncer:6432: connection refused"), lookupCount: &lookups}
+
+	_, err := lm.MatchWorkSpaceLicenses(source, deps, knowledge.LicensePolicy{})
+
+	assert.ErrorIs(t, err, ErrKnowledgeLookup)
+	assert.Equal(t, 1, lookups, "no lookup starts after the first failure")
+}
+
+func TestFailedSpdxCheckFailsTheRun(t *testing.T) {
+	deps := map[string]map[string]sbomTypes.Versions{"left-pad": {"1.0.0": {}}}
+	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB}
+	source := fakeKnowledge{packages: map[string]string{"left-pad": "MIT"}, spdxErr: errors.New("i/o timeout")}
+
+	_, err := lm.MatchWorkSpaceLicenses(source, deps, knowledge.LicensePolicy{DisallowedLicense: []string{"MIT"}})
+
+	assert.ErrorIs(t, err, ErrKnowledgeLookup)
 }
 
 func TestOrExpressionWithAnAllowedAlternativeIsNotAViolation(t *testing.T) {
