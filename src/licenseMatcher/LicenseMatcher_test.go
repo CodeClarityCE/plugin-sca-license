@@ -10,10 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// fakeKnowledge serves package licenses and the SPDX list from maps, and can fail lookups.
+// fakeKnowledge serves package and version licenses and the SPDX list from maps, and can fail lookups.
 type fakeKnowledge struct {
 	packages    map[string]string
+	versions    map[string]string // keyed by name@version
 	spdx        []string
+	languages   *[]string
 	packageErr  error
 	spdxErr     error
 	lookupCount *int
@@ -25,13 +27,16 @@ func (f fakeKnowledge) count() {
 	}
 }
 
-func (f fakeKnowledge) PackageLicense(name string) (string, bool, error) {
+func (f fakeKnowledge) PackageLicense(name, version, language string) (PackageLicenses, bool, error) {
 	f.count()
+	if f.languages != nil {
+		*f.languages = append(*f.languages, language)
+	}
 	if f.packageErr != nil {
-		return "", false, f.packageErr
+		return PackageLicenses{}, false, f.packageErr
 	}
 	license, ok := f.packages[name]
-	return license, ok, nil
+	return PackageLicenses{Version: f.versions[name+"@"+version], Package: license}, ok, nil
 }
 
 func (f fakeKnowledge) IsSpdxLicense(id string) (bool, error) {
@@ -101,6 +106,36 @@ func TestNonSpdxPartIsKeptByItsOwnText(t *testing.T) {
 
 	assert.Equal(t, map[string][]string{"MIT": {"rgbcolor@1.0.0"}}, spdx)
 	assert.Equal(t, map[string][]string{"SEE LICENSE IN FEEL-FREE.md": {"rgbcolor@1.0.0"}}, nonSpdx)
+}
+
+func TestDependencyUsesItsVersionsLicense(t *testing.T) {
+	deps := map[string]map[string]sbomTypes.Versions{"glob": {"7.1.2": {}, "9.0.0": {}}}
+	source := fakeKnowledge{
+		packages: map[string]string{"glob": "BlueOak-1.0.0"},
+		versions: map[string]string{"glob@7.1.2": "ISC"},
+		spdx:     []string{"ISC", "BlueOak-1.0.0"},
+	}
+	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB}
+	info, err := lm.MatchWorkSpaceLicenses(source, deps, knowledge.LicensePolicy{})
+
+	assert.NoError(t, err)
+	// 9.0.0 has no version license recorded, so it falls back to the package license.
+	assert.Equal(t, map[string][]string{
+		"ISC":           {"glob@7.1.2"},
+		"BlueOak-1.0.0": {"glob@9.0.0"},
+	}, info.LicensesDepMap)
+}
+
+func TestLookupAsksForTheMatchersLanguage(t *testing.T) {
+	var languages []string
+	deps := map[string]map[string]sbomTypes.Versions{"psr/log": {"3.0.0": {}}}
+	source := fakeKnowledge{packages: map[string]string{"psr/log": "MIT"}, spdx: spdxList, languages: &languages}
+	lm := LicenseMatcher{LicenseDataSource: LICENSE_DATA_SOURCE_DB, Language: "php"}
+
+	_, err := lm.MatchWorkSpaceLicenses(source, deps, knowledge.LicensePolicy{})
+
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"php"}, languages)
 }
 
 func TestUnknownPackageIsKeptWithoutALicense(t *testing.T) {

@@ -24,6 +24,8 @@ const (
 type LicenseMatcher struct {
 	PostProcessLicenses bool
 	LicenseDataSource   LicenseDataSource
+	// Language is the knowledge base language of the dependencies, such as "javascript" or "php".
+	Language string
 }
 
 // ErrKnowledgeLookup marks a failed knowledge database lookup that fails the step.
@@ -32,20 +34,36 @@ var ErrKnowledgeLookup = errors.New("knowledge lookup failed")
 // Knowledge answers the license questions the matcher asks of the knowledge base.
 // Something missing from the knowledge base is not an error.
 type Knowledge interface {
-	// PackageLicense returns the package's license expression, or found false if the package is unknown.
-	PackageLicense(name string) (license string, found bool, err error)
+	// PackageLicense returns the licenses recorded for a package version, or found false if the package is unknown.
+	PackageLicense(name, version, language string) (licenses PackageLicenses, found bool, err error)
 	// IsSpdxLicense reports whether id is on the SPDX license list.
 	IsSpdxLicense(id string) (bool, error)
 }
 
+// PackageLicenses holds the license expressions the knowledge base records for a package version.
+type PackageLicenses struct {
+	// Version is the license of the version asked about, empty when its row has none.
+	Version string
+	// Package is the package-level license, which is the newest release's.
+	Package string
+}
+
+// Expression is the version's license, or the package's when the version has none.
+func (l PackageLicenses) Expression() string {
+	if l.Version != "" {
+		return l.Version
+	}
+	return l.Package
+}
+
 type dbKnowledge struct{ db *bun.DB }
 
-func (k dbKnowledge) PackageLicense(name string) (string, bool, error) {
-	license, err := licenseRepository.GetPackageLicense(k.db, name)
+func (k dbKnowledge) PackageLicense(name, version, language string) (PackageLicenses, bool, error) {
+	pkg, ver, err := licenseRepository.GetPackageLicense(k.db, name, version, language)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", false, nil
+		return PackageLicenses{}, false, nil
 	}
-	return license, err == nil, err
+	return PackageLicenses{Version: ver, Package: pkg}, err == nil, err
 }
 
 func (k dbKnowledge) IsSpdxLicense(id string) (bool, error) {
@@ -74,10 +92,11 @@ func (lm LicenseMatcher) MatchWorkSpaceLicenses(source Knowledge, dependencies m
 			if lm.LicenseDataSource != LICENSE_DATA_SOURCE_DB {
 				continue
 			}
-			expression, found, err := source.PackageLicense(dependency_name)
+			licenses, found, err := source.PackageLicense(dependency_name, version_name, lm.Language)
 			if err != nil {
 				return types.WorkSpaceLicenseInfoInternal{}, fmt.Errorf("%w: license of %s: %w", ErrKnowledgeLookup, dependency_name, err)
 			}
+			expression := licenses.Expression()
 			ids := LicenseIDs(expression)
 			if !found || len(ids) == 0 {
 				logrus.WithFields(logrus.Fields{"package": dependency_name, "version": version_name}).
