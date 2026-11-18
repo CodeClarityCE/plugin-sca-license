@@ -4,7 +4,7 @@ go 1.27.4
 
 require (
 	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.28-alpha
-	github.com/CodeClarityCE/utility-boilerplates v0.0.10-alpha
+	github.com/CodeClarityCE/utility-boilerplates v0.0.11-alpha
 	github.com/CodeClarityCE/utility-types v0.0.22-alpha
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.10.2
