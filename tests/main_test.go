@@ -18,6 +18,8 @@ func TestCreate(t *testing.T) {
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
+	// Without a database, skip after 1s instead of retrying for the default 120s.
+	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
 
 	// Create PluginBase for testing
 	pluginBase, err := boilerplates.CreatePluginBase()
@@ -32,7 +34,10 @@ func TestCreate(t *testing.T) {
 
 	sbom := getmockSBOM()
 
-	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Assert the expected values
 	assert.NotNil(t, out)
@@ -46,6 +51,8 @@ func BenchmarkCreate(b *testing.B) {
 	os.Setenv("PG_DB_PORT", "5432")
 	os.Setenv("PG_DB_USER", "postgres")
 	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
+	// Without a database, skip after 1s instead of retrying for the default 120s.
+	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
 
 	// Create PluginBase for testing
 	pluginBase, err := boilerplates.CreatePluginBase()
@@ -60,7 +67,10 @@ func BenchmarkCreate(b *testing.B) {
 
 	sbom := getmockSBOM()
 
-	out := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
+	if err != nil {
+		b.Fatal(err)
+	}
 
 	// Assert the expected values
 	assert.NotNil(b, out)

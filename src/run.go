@@ -18,7 +18,13 @@ import (
 // Start is a function that starts the analysis process for a given SBOM (Software Bill of Materials).
 // It takes the SBOM ID, language ID, license policy, and database as input parameters.
 // It returns the analysis output as a types.Output struct.
-func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePolicy knowledge.LicensePolicy, start time.Time) types.Output {
+// A failed knowledge lookup returns a failed output and an ErrKnowledgeLookup error.
+func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePolicy knowledge.LicensePolicy, start time.Time) (types.Output, error) {
+	return StartWithKnowledge(licenseMatcherManager.DBKnowledge(knowledge_db), sbom, languageId, licensePolicy, start)
+}
+
+// StartWithKnowledge is Start with the knowledge lookups supplied.
+func StartWithKnowledge(source licenseMatcherManager.Knowledge, sbom sbom.Output, languageId string, licensePolicy knowledge.LicensePolicy, start time.Time) (types.Output, error) {
 
 	// Check if the previous stage finished correctly
 	if sbom.AnalysisInfo.Status != codeclarity.SUCCESS {
@@ -27,7 +33,7 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 			"Execution of the previous stage was unsuccessful, upon which the current stage relies", exceptions.PREVIOUS_STAGE_FAILED,
 		)
 
-		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start)
+		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start), nil
 	}
 
 	var licenseMatcher licenseMatcherManager.LicenseMatcher
@@ -45,14 +51,18 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 	// In case language is not supported return an error
 	if !language_supported {
 		exceptionManager.AddError("", exceptions.UNSUPPORTED_LANGUAGE_REQUESTED, "", exceptions.UNSUPPORTED_LANGUAGE_REQUESTED)
-		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start)
+		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start), nil
 	}
 
 	workSpaceData := map[string]types.WorkSpaceLicenseInfoInternal{}
 
 	// workSpaceData := map[string]types.WorkSpaceVulnerabilitiesInternal{}
 	for workspaceKey, workspace := range sbom.WorkSpaces {
-		workSpaceData[workspaceKey] = licenseMatcher.GetWorkSpaceLicenses(knowledge_db, workspace.Dependencies, licensePolicy)
+		info, err := licenseMatcher.MatchWorkSpaceLicenses(source, workspace.Dependencies, licensePolicy)
+		if err != nil {
+			return outputGenerator.FailureOutput(sbom.AnalysisInfo, start), err
+		}
+		workSpaceData[workspaceKey] = info
 	}
 
 	// Generate truncated workspace data for the output
@@ -83,5 +93,5 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 	analysisStats := outputGenerator.GenerateAnalysisStats(workSpaceData)
 
 	// Return the analysis results
-	return outputGenerator.SuccessOutput(workSpaceDataTruncated, analysisStats, sbom.AnalysisInfo, start)
+	return outputGenerator.SuccessOutput(workSpaceDataTruncated, analysisStats, sbom.AnalysisInfo, start), nil
 }
