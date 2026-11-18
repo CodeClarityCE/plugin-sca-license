@@ -15,6 +15,9 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// knowledgeLanguages maps an SBOM language to the language its packages have in the knowledge base.
+var knowledgeLanguages = map[string]string{"JS": "javascript", "PHP": "php"}
+
 // Start is a function that starts the analysis process for a given SBOM (Software Bill of Materials).
 // It takes the SBOM ID, language ID, license policy, and database as input parameters.
 // It returns the analysis output as a types.Output struct.
@@ -40,10 +43,11 @@ func StartWithKnowledge(source licenseMatcherManager.Knowledge, sbom sbom.Output
 
 	language_supported := false
 	// Check which language was requested
-	if languageId == "JS" || languageId == "PHP" {
+	if knowledgeLanguage, ok := knowledgeLanguages[languageId]; ok {
 		licenseMatcher = licenseMatcherManager.LicenseMatcher{
 			LicenseDataSource:   licenseMatcherManager.LICENSE_DATA_SOURCE_DB,
 			PostProcessLicenses: true,
+			Language:            knowledgeLanguage,
 		}
 		language_supported = true
 	}
