@@ -9,6 +9,7 @@ import (
 
 	sbomTypes "github.com/CodeClarityCE/plugin-sbom-javascript/src/types/sbom/js"
 	license "github.com/CodeClarityCE/plugin-sca-license/src"
+	matcher "github.com/CodeClarityCE/plugin-sca-license/src/licenseMatcher"
 	"github.com/CodeClarityCE/plugin-sca-license/src/types"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
@@ -21,12 +22,12 @@ type stubKnowledge struct {
 	err      error
 }
 
-func (s stubKnowledge) PackageLicense(name string) (string, bool, error) {
+func (s stubKnowledge) PackageLicense(name, version, language string) (matcher.PackageLicenses, bool, error) {
 	if s.err != nil {
-		return "", false, s.err
+		return matcher.PackageLicenses{}, false, s.err
 	}
 	l, ok := s.licenses[name]
-	return l, ok, nil
+	return matcher.PackageLicenses{Package: l}, ok, nil
 }
 
 func (s stubKnowledge) IsSpdxLicense(id string) (bool, error) {

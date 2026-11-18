@@ -14,13 +14,23 @@ func GetSPDXLicenseByName(name string, knowledge_db *bun.DB) (knowledge.License,
 	return license, err
 }
 
-// GetPackageLicense returns the license expression the knowledge base holds for a package.
-// It is the package's latest license, whatever version is asked about.
-func GetPackageLicense(knowledge_db *bun.DB, depName string) (string, error) {
-	var dependency knowledge.Package
-	err := knowledge_db.NewSelect().Model(&dependency).Where("name = ?", depName).Scan(context.Background(), &dependency)
-	if err != nil {
-		return "", err
+// GetPackageLicense returns a package's license and the given version's license from the knowledge base.
+// The version license is empty when the version row is missing or has none recorded.
+func GetPackageLicense(knowledge_db *bun.DB, name, version, language string) (packageLicense string, versionLicense string, err error) {
+	var row struct {
+		PackageLicense string `bun:"package_license"`
+		VersionLicense string `bun:"version_license"`
 	}
-	return dependency.License, nil
+	err = knowledge_db.NewSelect().
+		TableExpr("package AS p").
+		ColumnExpr("COALESCE(p.license, '') AS package_license").
+		ColumnExpr("COALESCE(v.extra->>?, '') AS version_license", VersionLicenseKey).
+		Join("LEFT JOIN version AS v ON v.package_id = p.id AND v.version = ?", version).
+		Where("p.name = ? AND p.language = ?", name, language).
+		Limit(1).
+		Scan(context.Background(), &row)
+	return row.PackageLicense, row.VersionLicense, err
 }
+
+// VersionLicenseKey is the version extra key where the knowledge service stores a version's license expression.
+const VersionLicenseKey = "license_expression"
