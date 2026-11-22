@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"io/fs"
 	"maps"
 	"os"
-	"path/filepath"
 	"slices"
 	"testing"
 	"time"
@@ -61,12 +61,13 @@ func (k anyLicenseKnowledge) IsSpdxLicense(id string) (bool, error) {
 
 // FuzzReadSbom checks that reading any stored SBOM, then matching its licenses, never panics.
 func FuzzReadSbom(f *testing.F) {
-	paths, err := filepath.Glob(filepath.Join("testdata", "sbom", "*", "sbom.json"))
+	fixtures := os.DirFS("testdata")
+	paths, err := fs.Glob(fixtures, "sbom/*/sbom.json")
 	if err != nil || len(paths) == 0 {
 		f.Fatalf("no SBOM fixtures: %v", err)
 	}
 	for _, path := range paths {
-		data, err := os.ReadFile(path)
+		data, err := fs.ReadFile(fixtures, path)
 		if err != nil {
 			f.Fatal(err)
 		}
