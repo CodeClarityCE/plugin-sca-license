@@ -1,0 +1,505 @@
+{
+  "workspaces": {
+    ".": {
+      "dependencies": {
+        "doctrine/dbal": {
+          "v2.5.0": {
+            "key": "doctrine/dbal@v2.5.0",
+            "requires": {
+              "php": "\u003e=5.3.2"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.2"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Roman Borschel",
+                "email": "roman@code-factory.org"
+              }
+            ],
+            "description": "Database Abstraction Layer"
+          }
+        },
+        "firebase/php-jwt": {
+          "v3.0.0": {
+            "key": "firebase/php-jwt@v3.0.0",
+            "requires": {
+              "php": "\u003e=5.3.0"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "BSD-3-Clause"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Neuman Vong",
+                "email": "neuman+pear@twilio.com"
+              }
+            ],
+            "description": "A simple library to encode and decode JSON Web Tokens (JWT) in PHP."
+          }
+        },
+        "guzzlehttp/guzzle": {
+          "6.0.0": {
+            "key": "guzzlehttp/guzzle@6.0.0",
+            "requires": {
+              "php": "\u003e=5.5.0"
+            },
+            "dependencies": {
+              "php": "\u003e=5.5.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Michael Dowling",
+                "email": "mtdowling@gmail.com"
+              }
+            ],
+            "description": "Guzzle is a PHP HTTP client library"
+          }
+        },
+        "league/flysystem": {
+          "1.0.0": {
+            "key": "league/flysystem@1.0.0",
+            "requires": {
+              "php": "\u003e=5.5.9"
+            },
+            "dependencies": {
+              "php": "\u003e=5.5.9"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Frank de Jonge",
+                "email": "info@frenky.net"
+              }
+            ],
+            "description": "Filesystem abstraction: Many filesystems, one API."
+          }
+        },
+        "monolog/monolog": {
+          "1.17.0": {
+            "key": "monolog/monolog@1.17.0",
+            "requires": {
+              "php": "\u003e=5.3.0",
+              "psr/log": "~1.0"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.0",
+              "psr/log": "~1.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Jordi Boggiano",
+                "email": "j.boggiano@seld.be"
+              }
+            ],
+            "description": "Sends your logs to files, sockets, inboxes, databases and various web services"
+          }
+        },
+        "phpmailer/phpmailer": {
+          "v5.2.14": {
+            "key": "phpmailer/phpmailer@v5.2.14",
+            "requires": {
+              "php": "\u003e=5.0.0"
+            },
+            "dependencies": {
+              "php": "\u003e=5.0.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "LGPL-2.1"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Jim Jagielski",
+                "email": "jimjag@gmail.com"
+              }
+            ],
+            "description": "PHPMailer is a full-featured email creation and transfer class for PHP"
+          }
+        },
+        "phpunit/phpunit": {
+          "6.0.0": {
+            "key": "phpunit/phpunit@6.0.0",
+            "requires": {
+              "php": "^7.0"
+            },
+            "dependencies": {
+              "php": "^7.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": true,
+            "prod": false,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "BSD-3-Clause"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Sebastian Bergmann",
+                "email": "sebastian@phpunit.de",
+                "role": "lead"
+              }
+            ],
+            "description": "The PHP Unit Testing framework."
+          }
+        },
+        "psr/log": {
+          "1.1.0": {
+            "key": "psr/log@1.1.0",
+            "requires": {
+              "php": "\u003e=5.3.0"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.0"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": false,
+            "transitive": true,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "PHP-FIG"
+              }
+            ],
+            "description": "Common interface for logging libraries"
+          }
+        },
+        "psy/psysh": {
+          "v0.8.0": {
+            "key": "psy/psysh@v0.8.0",
+            "requires": {
+              "php": "\u003e=5.3.9"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.9"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": true,
+            "prod": false,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Justin Hileman",
+                "email": "justin@justinhileman.info"
+              }
+            ],
+            "description": "An interactive shell for modern PHP."
+          }
+        },
+        "symfony/http-foundation": {
+          "v4.0.0": {
+            "key": "symfony/http-foundation@v4.0.0",
+            "requires": {
+              "php": "^7.1.3"
+            },
+            "dependencies": {
+              "php": "^7.1.3"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "MIT"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com"
+              }
+            ],
+            "description": "Symfony HttpFoundation Component"
+          }
+        },
+        "twig/twig": {
+          "v1.35.0": {
+            "key": "twig/twig@v1.35.0",
+            "requires": {
+              "php": "\u003e=5.3.3"
+            },
+            "dependencies": {
+              "php": "\u003e=5.3.3"
+            },
+            "optional": false,
+            "bundled": false,
+            "dev": false,
+            "prod": true,
+            "direct": true,
+            "transitive": false,
+            "licenses": [
+              "BSD-3-Clause"
+            ],
+            "type": "library",
+            "authors": [
+              {
+                "name": "Fabien Potencier",
+                "email": "fabien@symfony.com",
+                "role": "Lead Developer"
+              }
+            ],
+            "description": "Twig, the flexible, fast, and secure template language for PHP"
+          }
+        }
+      },
+      "start": {
+        "dependencies": [
+          {
+            "name": "firebase/php-jwt",
+            "version": "v3.0.0",
+            "constraint": "3.0.0"
+          },
+          {
+            "name": "monolog/monolog",
+            "version": "1.17.0",
+            "constraint": "1.17.0"
+          },
+          {
+            "name": "twig/twig",
+            "version": "v1.35.0",
+            "constraint": "1.35.0"
+          },
+          {
+            "name": "doctrine/dbal",
+            "version": "v2.5.0",
+            "constraint": "2.5.0"
+          },
+          {
+            "name": "guzzlehttp/guzzle",
+            "version": "6.0.0",
+            "constraint": "6.0.0"
+          },
+          {
+            "name": "league/flysystem",
+            "version": "1.0.0",
+            "constraint": "1.0.0"
+          },
+          {
+            "name": "symfony/http-foundation",
+            "version": "v4.0.0",
+            "constraint": "4.0.0"
+          },
+          {
+            "name": "phpmailer/phpmailer",
+            "version": "v5.2.14",
+            "constraint": "5.2.14"
+          }
+        ],
+        "dev_dependencies": [
+          {
+            "name": "psy/psysh",
+            "version": "v0.8.0",
+            "constraint": "0.8.0"
+          },
+          {
+            "name": "phpunit/phpunit",
+            "version": "6.0.0",
+            "constraint": "6.0.0"
+          }
+        ]
+      }
+    }
+  },
+  "analysis_info": {
+    "status": "success",
+    "project_name": "test/vulnerable-php-project",
+    "working_directory": "test-vulnerable",
+    "package_manager": "composer",
+    "time": {
+      "analysis_start_time": "2025-08-17T23:13:14+02:00",
+      "analysis_end_time": "2025-08-17T23:13:14+02:00",
+      "analysis_delta_time": 0.012390625
+    },
+    "errors": null,
+    "paths": {
+      "lock_file_path": "test-vulnerable/composer.lock",
+      "package_file_path": "test-vulnerable/composer.json",
+      "work_space_package_file_paths": {},
+      "relative_lock_file_path": "composer.lock",
+      "relative_package_file_path": "composer.json"
+    },
+    "workspaces": {
+      "default_workspace_name": ".",
+      "self_managed_workspace_name": "self-managed",
+      "work_spaces_used": false
+    },
+    "extra": {
+      "version_seperator": "@",
+      "import_path_seperator": "/",
+      "lock_file_version": 1,
+      "php_version": "\u003e=7.4",
+      "framework": "Symfony Components",
+      "minimum_stability": "stable",
+      "content_hash": "test-vulnerable-content-hash",
+      "platform": {
+        "ext-curl": "*",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-xml": "*",
+        "ext-zip": "*",
+        "php": "\u003e=7.4"
+      },
+      "statistics": {
+        "total_packages": 0,
+        "direct_packages": 0,
+        "transitive_packages": 0,
+        "dev_packages": 0,
+        "unique_authors": 0,
+        "unique_licenses": 0,
+        "license_breakdown": null,
+        "type_breakdown": null,
+        "vulnerable_packages": 0,
+        "outdated_packages": 0
+      },
+      "php_extensions": {
+        "php_version": "\u003e=7.4",
+        "zend_version": "",
+        "extensions": {
+          "curl": {
+            "name": "curl",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "Client URL Library for HTTP requests"
+          },
+          "gd": {
+            "name": "gd",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "Graphics Draw library for image manipulation"
+          },
+          "json": {
+            "name": "json",
+            "version": "*",
+            "type": "core",
+            "status": "required",
+            "description": "JavaScript Object Notation support"
+          },
+          "mbstring": {
+            "name": "mbstring",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "Multi-byte string handling"
+          },
+          "openssl": {
+            "name": "openssl",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "OpenSSL cryptographic functions"
+          },
+          "pdo": {
+            "name": "pdo",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "PHP Data Objects database abstraction"
+          },
+          "xml": {
+            "name": "xml",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "XML parser support"
+          },
+          "zip": {
+            "name": "zip",
+            "version": "*",
+            "type": "bundled",
+            "status": "required",
+            "description": "ZIP archive manipulation"
+          }
+        },
+        "core_modules": [],
+        "loaded_extensions": [],
+        "configured_extensions": [
+          "openssl",
+          "curl",
+          "xml",
+          "pdo",
+          "mbstring",
+          "gd",
+          "json",
+          "zip"
+        ]
+      }
+    }
+  }
+}
