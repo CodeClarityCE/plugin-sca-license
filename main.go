@@ -17,7 +17,6 @@ import (
 	"github.com/CodeClarityCE/utility-boilerplates"
 	types_amqp "github.com/CodeClarityCE/utility-types/amqp"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
-	"github.com/CodeClarityCE/utility-types/exceptions"
 	exceptionManager "github.com/CodeClarityCE/utility-types/exceptions"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	plugin_db "github.com/CodeClarityCE/utility-types/plugin_db"
@@ -203,8 +202,8 @@ func analyzeSbom(databases *boilerplates.PluginDatabases, sbomInfo sbomKey, lice
 	sbomData := sbom.Output{}
 	if err = json.Unmarshal(raw, &sbomData); err != nil {
 		exceptionManager.AddError(
-			"", exceptions.GENERIC_ERROR,
-			fmt.Sprintf("Error when reading %s output: %s", sbomInfo.pluginName, err), exceptions.FAILED_TO_READ_PREVIOUS_STAGE_OUTPUT,
+			"", exceptionManager.GENERIC_ERROR,
+			fmt.Sprintf("Error when reading %s output: %s", sbomInfo.pluginName, err), exceptionManager.FAILED_TO_READ_PREVIOUS_STAGE_OUTPUT,
 		)
 		return types.Output{}, fmt.Errorf("unmarshal %s SBOM: %w", sbomInfo.language, err)
 	}

@@ -9,7 +9,6 @@ import (
 	outputGenerator "github.com/CodeClarityCE/plugin-sca-license/src/outputGenerator"
 	types "github.com/CodeClarityCE/plugin-sca-license/src/types"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
-	"github.com/CodeClarityCE/utility-types/exceptions"
 	exceptionManager "github.com/CodeClarityCE/utility-types/exceptions"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	"github.com/uptrace/bun"
@@ -32,8 +31,8 @@ func StartWithKnowledge(source licenseMatcherManager.Knowledge, sbom sbom.Output
 	// Check if the previous stage finished correctly
 	if sbom.AnalysisInfo.Status != codeclarity.SUCCESS {
 		exceptionManager.AddError(
-			"Execution of the previous stage was unsuccessful, upon which the current stage relies", exceptions.PREVIOUS_STAGE_FAILED,
-			"Execution of the previous stage was unsuccessful, upon which the current stage relies", exceptions.PREVIOUS_STAGE_FAILED,
+			"Execution of the previous stage was unsuccessful, upon which the current stage relies", exceptionManager.PREVIOUS_STAGE_FAILED,
+			"Execution of the previous stage was unsuccessful, upon which the current stage relies", exceptionManager.PREVIOUS_STAGE_FAILED,
 		)
 
 		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start), nil
@@ -54,7 +53,7 @@ func StartWithKnowledge(source licenseMatcherManager.Knowledge, sbom sbom.Output
 
 	// In case language is not supported return an error
 	if !language_supported {
-		exceptionManager.AddError("", exceptions.UNSUPPORTED_LANGUAGE_REQUESTED, "", exceptions.UNSUPPORTED_LANGUAGE_REQUESTED)
+		exceptionManager.AddError("", exceptionManager.UNSUPPORTED_LANGUAGE_REQUESTED, "", exceptionManager.UNSUPPORTED_LANGUAGE_REQUESTED)
 		return outputGenerator.FailureOutput(sbom.AnalysisInfo, start), nil
 	}
 
