@@ -1,79 +1,60 @@
 package main
 
 import (
-	"os"
+	"context"
 	"testing"
 	"time"
 
 	license "github.com/CodeClarityCE/plugin-sca-license/src"
-	"github.com/CodeClarityCE/utility-boilerplates"
+	"github.com/CodeClarityCE/utility-boilerplates/testdeps"
 	codeclarity "github.com/CodeClarityCE/utility-types/codeclarity_db"
 	knowledge "github.com/CodeClarityCE/utility-types/knowledge_db"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/uptrace/bun"
 )
 
+// knowledgeDB returns a throwaway knowledge database where ms is MIT licensed.
+func knowledgeDB(tb testing.TB) *bun.DB {
+	tb.Helper()
+	db := testdeps.Postgres(tb)
+	ctx := context.Background()
+	_, err := db.ExecContext(ctx, `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+	require.NoError(tb, err)
+	for _, model := range []any{(*knowledge.Package)(nil), (*knowledge.Version)(nil), (*knowledge.License)(nil)} {
+		_, err = db.NewCreateTable().Model(model).Exec(ctx)
+		require.NoError(tb, err)
+	}
+	_, err = db.ExecContext(ctx, `
+		INSERT INTO package (name, language, license) VALUES ('ms', 'javascript', 'MIT');
+		INSERT INTO licenses ("licenseId", name) VALUES ('MIT', 'MIT License');`)
+	require.NoError(tb, err)
+	return db
+}
+
 func TestCreate(t *testing.T) {
-	// Set test database environment
-	os.Setenv("PG_DB_HOST", "127.0.0.1")
-	os.Setenv("PG_DB_PORT", "5432")
-	os.Setenv("PG_DB_USER", "postgres")
-	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
-	// Without a database, skip after 1s instead of retrying for the default 120s.
-	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
+	db := knowledgeDB(t)
+	licensePolicy := knowledge.LicensePolicy{DisallowedLicense: []string{"MIT"}}
 
-	// Create PluginBase for testing
-	pluginBase, err := boilerplates.CreatePluginBase()
-	if err != nil {
-		t.Skipf("Skipping test due to database connection error: %v", err)
-		return
-	}
-	defer pluginBase.Close()
+	out, err := license.Start(db, getmockSBOM(), "JS", licensePolicy, time.Now())
+	require.NoError(t, err)
 
-	var licensePolicy = knowledge.LicensePolicy{}
-	licensePolicy.DisallowedLicense = []string{"MIT"}
-
-	sbom := getmockSBOM()
-
-	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Assert the expected values
-	assert.NotNil(t, out)
-	assert.Equal(t, codeclarity.SUCCESS, out.AnalysisInfo.Status)
-	assert.NotEmpty(t, out.WorkSpaces)
+	require.Equal(t, codeclarity.SUCCESS, out.AnalysisInfo.Status)
+	workspace := out.WorkSpaces["."]
+	assert.Equal(t, []string{"ms@2.1.3"}, workspace.LicensesDepMap["MIT"])
+	assert.Equal(t, []string{"MIT"}, workspace.LicenseComplianceViolations)
 }
 
 func BenchmarkCreate(b *testing.B) {
-	// Set test database environment
-	os.Setenv("PG_DB_HOST", "127.0.0.1")
-	os.Setenv("PG_DB_PORT", "5432")
-	os.Setenv("PG_DB_USER", "postgres")
-	os.Setenv("PG_DB_PASSWORD", "!ChangeMe!")
-	// Without a database, skip after 1s instead of retrying for the default 120s.
-	os.Setenv("DB_CONNECT_MAX_WAIT_SECONDS", "1")
-
-	// Create PluginBase for testing
-	pluginBase, err := boilerplates.CreatePluginBase()
-	if err != nil {
-		b.Skipf("Skipping benchmark due to database connection error: %v", err)
-		return
-	}
-	defer pluginBase.Close()
-
-	var licensePolicy = knowledge.LicensePolicy{}
-	licensePolicy.DisallowedLicense = []string{"MIT"}
-
+	db := knowledgeDB(b)
+	licensePolicy := knowledge.LicensePolicy{DisallowedLicense: []string{"MIT"}}
 	sbom := getmockSBOM()
 
-	out, err := license.Start(pluginBase.DB.Knowledge, sbom, "JS", licensePolicy, time.Now())
-	if err != nil {
-		b.Fatal(err)
+	for b.Loop() {
+		out, err := license.Start(db, sbom, "JS", licensePolicy, time.Now())
+		if err != nil {
+			b.Fatal(err)
+		}
+		assert.Equal(b, codeclarity.SUCCESS, out.AnalysisInfo.Status)
 	}
-
-	// Assert the expected values
-	assert.NotNil(b, out)
-	assert.Equal(b, codeclarity.SUCCESS, out.AnalysisInfo.Status)
-	assert.NotEmpty(b, out.WorkSpaces)
 }
