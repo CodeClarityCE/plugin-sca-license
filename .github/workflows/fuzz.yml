@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   fuzz:
-    uses: CodeClarityCE/.github/.github/workflows/go-fuzz.yml@spec/312-beta
+    uses: CodeClarityCE/.github/.github/workflows/go-fuzz.yml@v1
     with:
       gowork-off: true
     permissions:
