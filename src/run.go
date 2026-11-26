@@ -26,7 +26,7 @@ func Start(knowledge_db *bun.DB, sbom sbom.Output, languageId string, licensePol
 }
 
 // StartWithKnowledge is Start with the knowledge lookups supplied.
-func StartWithKnowledge(source licenseMatcherManager.Knowledge, sbom sbom.Output, languageId string, licensePolicy knowledge.LicensePolicy, start time.Time) (types.Output, error) {
+func StartWithKnowledge(source licenseMatcherManager.LicenseSource, sbom sbom.Output, languageId string, licensePolicy knowledge.LicensePolicy, start time.Time) (types.Output, error) {
 
 	// Check if the previous stage finished correctly
 	if sbom.AnalysisInfo.Status != codeclarity.SUCCESS {
