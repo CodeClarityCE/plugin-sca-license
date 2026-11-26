@@ -3,9 +3,9 @@ module github.com/CodeClarityCE/plugin-sca-license
 go 1.27.4
 
 require (
-	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.36-alpha
-	github.com/CodeClarityCE/utility-boilerplates v0.0.19-alpha
-	github.com/CodeClarityCE/utility-types v0.0.30-alpha
+	github.com/CodeClarityCE/plugin-sbom-javascript v0.0.37-alpha
+	github.com/CodeClarityCE/utility-boilerplates v0.0.20-alpha
+	github.com/CodeClarityCE/utility-types v0.0.31-alpha
 	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -13,8 +13,8 @@ require (
 )
 
 require (
-	github.com/CodeClarityCE/utility-amqp-helper v0.0.23-alpha // indirect
-	github.com/CodeClarityCE/utility-dbhelper v0.0.26-alpha // indirect
+	github.com/CodeClarityCE/utility-amqp-helper v0.0.24-alpha // indirect
+	github.com/CodeClarityCE/utility-dbhelper v0.0.27-alpha // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/prometheus/common v0.72.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
-	github.com/rabbitmq/amqp091-go v1.16.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.17.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/schollz/progressbar/v3 v3.19.1 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
