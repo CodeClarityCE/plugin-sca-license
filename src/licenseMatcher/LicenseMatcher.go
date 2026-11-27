@@ -31,9 +31,9 @@ type LicenseMatcher struct {
 // ErrKnowledgeLookup marks a failed knowledge database lookup that fails the step.
 var ErrKnowledgeLookup = errors.New("knowledge lookup failed")
 
-// Knowledge answers the license questions the matcher asks of the knowledge base.
+// LicenseSource answers the license questions the matcher asks of the knowledge base.
 // Something missing from the knowledge base is not an error.
-type Knowledge interface {
+type LicenseSource interface {
 	// PackageLicense returns the licenses recorded for a package version, or found false if the package is unknown.
 	PackageLicense(name, version, language string) (licenses PackageLicenses, found bool, err error)
 	// IsSpdxLicense reports whether id is on the SPDX license list.
@@ -75,13 +75,13 @@ func (k dbKnowledge) IsSpdxLicense(id string) (bool, error) {
 }
 
 // DBKnowledge reads licenses from the knowledge database.
-func DBKnowledge(knowledge_db *bun.DB) Knowledge {
+func DBKnowledge(knowledge_db *bun.DB) LicenseSource {
 	return dbKnowledge{db: knowledge_db}
 }
 
 // MatchWorkSpaceLicenses lists each dependency under every license its license expression names.
 // It stops at the first failed lookup and returns an ErrKnowledgeLookup error.
-func (lm LicenseMatcher) MatchWorkSpaceLicenses(source Knowledge, dependencies map[string]map[string]sbomTypes.Versions, licensePolicy knowledge.LicensePolicy) (types.WorkSpaceLicenseInfoInternal, error) {
+func (lm LicenseMatcher) MatchWorkSpaceLicenses(source LicenseSource, dependencies map[string]map[string]sbomTypes.Versions, licensePolicy knowledge.LicensePolicy) (types.WorkSpaceLicenseInfoInternal, error) {
 	licensesDepMap := map[string][]string{}
 	nonSpdxLicensesDepMap := map[string][]string{}
 	licenseComplianceViolations := map[string][]string{}
